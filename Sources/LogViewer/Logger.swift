@@ -37,4 +37,9 @@ public extension Logger {
         let log = Log(message: message, tags: Set(tags), fileID: fileID, function: function)
         add(log)
     }
+
+    func add(_ message: String, tags: [Tag], fileID: String = #fileID, function: String = #function) {
+        let log = Log(message: message, tags: Set(tags), fileID: fileID, function: function)
+        add(log)
+    }
 }
