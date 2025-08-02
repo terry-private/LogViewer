@@ -5,6 +5,7 @@ import Foundation
 public final class Logger {
     internal var active: Bool = true
     internal var logs: [Log] = []
+    internal var tags: Set<Tag> = []
     internal var fileTagToLogs: [String: [Log]] = [:]
     internal var functionTagToLogs: [String: [Log]] = [:]
     internal init() {}
@@ -18,6 +19,7 @@ public final class Logger {
     internal func add(_ log: Log) {
         guard active else { return }
         logs.append(log)
+        tags.formUnion(log.tags)
         fileTagToLogs[log.fileID, default: []].append(log)
         functionTagToLogs[log.fileID + "\n> " + log.function, default: []].append(log)
     }

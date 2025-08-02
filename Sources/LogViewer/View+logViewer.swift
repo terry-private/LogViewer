@@ -10,21 +10,20 @@ public extension View {
     func logViewer(on trigger: ShowTrigger, tags: Tag...) -> some View {
         switch trigger {
         case .shake:
-            modifier(ShakeLogViewModifier(tags: tags))
+            modifier(ShakeLogViewModifier())
         case .custom(let visible):
-            modifier(CustomLogViewModifier(visible: visible, tags: tags))
+            modifier(CustomLogViewModifier(visible: visible))
         }
     }
 }
 
 struct CustomLogViewModifier: ViewModifier {
     @Binding var visible: Bool
-    let tags: [Tag]
     func body(content: Content) -> some View {
         content
             .overlay {
                 if visible {
-                    LogView(tags: tags) {
+                    LogView() {
                         visible = false
                     }
                 }
@@ -34,12 +33,11 @@ struct CustomLogViewModifier: ViewModifier {
 
 struct ShakeLogViewModifier: ViewModifier {
     @State var visible: Bool = false
-    let tags: [Tag]
     func body(content: Content) -> some View {
         content
             .overlay {
                 if visible {
-                    LogView(tags: tags) {
+                    LogView() {
                         visible = false
                     }
                 }

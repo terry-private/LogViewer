@@ -7,8 +7,8 @@ internal struct LogView: View {
     @State var autoScroll: Bool = true
     let dismiss: () -> Void
 
-    init(tags: [Tag], dismiss: @escaping () -> Void) {
-        viewState = .init(tags: tags)
+    init(dismiss: @escaping () -> Void) {
+        viewState = .init()
         self.dismiss = dismiss
     }
 

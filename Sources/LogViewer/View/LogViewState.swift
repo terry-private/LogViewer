@@ -7,7 +7,6 @@ internal final class LogViewState {
     var selectedPeriod = Period.all
     var filter: LogFilter = .all
     internal var searchKey: String = ""
-    let tags: [Tag]
     let selectedTag: Set<Tag> = []
     var fileExpands: String?
     var functionExpands: String?
@@ -30,8 +29,10 @@ internal final class LogViewState {
             } ?? []
         }
     }
-    init(tags: [Tag]) {
-        self.tags = tags
+    init() {
+    }
+    internal var tags: [Tag] {
+        Array(store.tags)
     }
     internal var active: Bool { store.active }
     internal var logs: [Log] { store.logs.filter(by: filter) }
