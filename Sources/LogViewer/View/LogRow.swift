@@ -2,10 +2,12 @@ import SwiftUI
 
 internal struct LogRow: View {
     let log: Log
+    let tags: [Tag]
     let isShowFilePath: Bool
     let isShowFunction: Bool
-    init(debugLog: Log, isShowFilePath: Bool = true, isShowFunction: Bool = true) {
+    init(debugLog: Log, tags: [Tag], isShowFilePath: Bool = true, isShowFunction: Bool = true) {
         self.log = debugLog
+        self.tags = tags
         self.isShowFilePath = isShowFilePath
         self.isShowFunction = isShowFunction
     }
@@ -14,12 +16,24 @@ internal struct LogRow: View {
             Text("\(log.timeText)")
                 .foregroundStyle(.secondary)
             if isShowFilePath {
-                indentedText(log.fileID)
-                    .foregroundStyle(.secondary)
+                indentedText(log.fileID, systemImage: "document")
             }
             if isShowFunction {
-                indentedText(log.function)
-                    .foregroundStyle(.secondary)
+                indentedText(log.function, systemImage: "function")
+            }
+            if !tags.isEmpty {
+                FlowLayout(spacing: 4) {
+                    ForEach(tags, id: \.self) { tag in
+                        Text(tag.rawValue)
+                            .padding(.horizontal, 5)
+                            .foregroundStyle(.secondary)
+                            .background {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.secondary)
+                            }
+
+                    }
+                }
             }
             Text(log.message)
         }
@@ -32,11 +46,23 @@ internal struct LogRow: View {
 
 extension LogRow {
     @ViewBuilder
-    func indentedText(_ text: String) -> some View {
+    func indentedText(_ text: String, systemImage: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(">")
+            Image(systemName: systemImage)
             Text(text)
         }
+        .foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder
+    func tagView(_ tag: Tag) -> some View {
+        Text(tag.rawValue)
+            .font(.caption)
+            .padding(3)
+            .background {
+                RoundedRectangle(cornerRadius: 6)
+            }
+            .foregroundColor(.blue)
     }
 }
 
@@ -65,7 +91,8 @@ private extension Log {
     ]
     List(debugLogs) { debugLog in
         LogRow(
-            debugLog: debugLog
+            debugLog: debugLog,
+            tags: ["api", "error"]
         )
     }
     .scrollContentBackground(.hidden)

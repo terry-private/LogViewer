@@ -10,6 +10,7 @@ internal final class LogViewState {
     let selectedTag: Set<Tag> = []
     var fileExpands: String?
     var functionExpands: String?
+    var isTransparent: Bool = false
     var displayLogs: [Log] {
         switch selectedPeriod {
         case .all: logs
@@ -29,7 +30,8 @@ internal final class LogViewState {
             } ?? []
         }
     }
-    init() {
+    init(isTransparent: Bool = false) {
+        self.isTransparent = isTransparent
     }
     internal var tags: [Tag] {
         Array(store.tags)

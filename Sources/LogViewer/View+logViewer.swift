@@ -7,23 +7,24 @@ public enum ShowTrigger {
 
 public extension View {
     @ViewBuilder
-    func logViewer(on trigger: ShowTrigger, tags: Tag...) -> some View {
+    func logViewer(on trigger: ShowTrigger, isTransparent: Bool = false) -> some View {
         switch trigger {
         case .shake:
-            modifier(ShakeLogViewModifier())
+            modifier(ShakeLogViewModifier(isTransparent: isTransparent))
         case .custom(let visible):
-            modifier(CustomLogViewModifier(visible: visible))
+            modifier(CustomLogViewModifier(visible: visible, isTransparent: isTransparent))
         }
     }
 }
 
 struct CustomLogViewModifier: ViewModifier {
     @Binding var visible: Bool
+    let isTransparent: Bool
     func body(content: Content) -> some View {
         content
             .overlay {
                 if visible {
-                    LogView() {
+                    LogView(isTransparent: isTransparent) {
                         visible = false
                     }
                 }
@@ -33,11 +34,12 @@ struct CustomLogViewModifier: ViewModifier {
 
 struct ShakeLogViewModifier: ViewModifier {
     @State var visible: Bool = false
+    let isTransparent: Bool
     func body(content: Content) -> some View {
         content
             .overlay {
                 if visible {
-                    LogView() {
+                    LogView(isTransparent: isTransparent) {
                         visible = false
                     }
                 }
