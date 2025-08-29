@@ -33,6 +33,7 @@ struct LogFilterView: View {
                         Circle()
                     }
             }
+            .padding(3)
             Text("")
                 .padding(10)
                 .frame(maxWidth: .infinity)

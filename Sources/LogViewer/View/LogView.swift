@@ -2,13 +2,12 @@ import Observation
 import SwiftUI
 
 internal struct LogView: View {
-    @State var viewState: LogViewState
+    @State var viewState: LogViewState = .init()
     @FocusState var focus: Bool
     @State var autoScroll: Bool = true
     let dismiss: () -> Void
 
-    init(isTransparent: Bool = false, dismiss: @escaping () -> Void) {
-        viewState = .init(isTransparent: isTransparent)
+    init(dismiss: @escaping () -> Void) {
         self.dismiss = dismiss
     }
 
@@ -69,7 +68,7 @@ internal struct LogView: View {
         }
         .background(
             Color(uiColor: .systemBackground)
-                .opacity(viewState.isTransparent ? 0.5 : 1)
+                .opacity(viewState.isBackgroundTransparent ? 0.5 : 1)
                 .ignoresSafeArea()
         )
     }
@@ -94,7 +93,7 @@ extension LogView {
             .pickerStyle(.segmented)
 
             Menu {
-                Toggle(isOn: $viewState.isTransparent) {
+                Toggle(isOn: $viewState.isBackgroundTransparent) {
                     Text("背景を半透明にする")
                 }
                 .fixedSize()
@@ -121,7 +120,7 @@ extension LogView {
         List {            switch viewState.selectedPeriod {
             case .all:
                 ForEach(viewState.logs) { log in
-                    LogRow(debugLog: log, tags: viewState.tags)
+                    LogRow(debugLog: log)
                         .listRowSeparator(.hidden)
                         .id(log.id)
                 }
@@ -129,7 +128,7 @@ extension LogView {
                 ForEach(viewState.fileTags, id: \.self) { fileName in
                     Section(isExpanded: expandBinding(title: fileName, \.fileExpands)) {
                         ForEach(viewState.fileLogs(for: fileName)) { log in
-                            LogRow(debugLog: log, tags: viewState.tags, isShowFilePath: false)
+                            LogRow(debugLog: log, isShowFilePath: false)
                                 .listRowSeparator(.hidden)
                                 .id(log.id)
                         }
@@ -142,7 +141,7 @@ extension LogView {
                 ForEach(viewState.functionTags, id: \.self) { fileFunction in
                     Section(isExpanded: expandBinding(title: fileFunction, \.functionExpands)) {
                         ForEach(viewState.functionLogs(for: fileFunction)) { log in
-                            LogRow(debugLog: log, tags: viewState.tags, isShowFilePath: false, isShowFunction: false)
+                            LogRow(debugLog: log, isShowFilePath: false, isShowFunction: false)
                                 .listRowSeparator(.hidden)
                                 .id(log.id)
                         }
@@ -225,11 +224,25 @@ extension LogView {
                 count += 1
             }
             if Bool.random() {
-                Logger.shared.add(.random)
+                Logger.shared.add(
+                    Log(
+                        message: "test message",
+                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrs"],
+                        fileID: "test.swift",
+                        function: "test()"
+                    )
+                )
                 count += 1
             }
             if Bool.random() {
-                Logger.shared.add(.random)
+                Logger.shared.add(
+                    Log(
+                        message: "test message",
+                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl"],
+                        fileID: "test.swift",
+                        function: "test()"
+                    )
+                )
                 count += 1
             }
         }

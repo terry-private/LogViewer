@@ -1,13 +1,15 @@
 import Foundation
+import OrderedCollections
 
 @MainActor
 @Observable
 public final class Logger {
     internal var active: Bool = true
     internal var logs: [Log] = []
-    internal var tags: Set<Tag> = []
+    internal var tags: OrderedSet<Tag> = []
     internal var fileTagToLogs: [String: [Log]] = [:]
     internal var functionTagToLogs: [String: [Log]] = [:]
+    internal var isBackgroundTransparent: Bool = false
     internal init() {}
 
     internal func fileLogs(for name: String) -> [Log] {
@@ -25,6 +27,7 @@ public final class Logger {
     }
     internal func deleteAll() {
         logs.removeAll()
+        tags.removeAll()
         fileTagToLogs.removeAll()
         functionTagToLogs.removeAll()
     }
@@ -34,12 +37,12 @@ public extension Logger {
     static let shared: Logger = .init()
 
     func add(_ message: String, tags: Tag..., fileID: String = #fileID, function: String = #function) {
-        let log = Log(message: message, tags: Set(tags), fileID: fileID, function: function)
+        let log = Log(message: message, tags: OrderedSet(tags), fileID: fileID, function: function)
         add(log)
     }
 
     func add(_ message: String, tags: [Tag], fileID: String = #fileID, function: String = #function) {
-        let log = Log(message: message, tags: Set(tags), fileID: fileID, function: function)
+        let log = Log(message: message, tags: OrderedSet(tags), fileID: fileID, function: function)
         add(log)
     }
 }

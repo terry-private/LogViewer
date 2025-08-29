@@ -51,15 +51,19 @@ struct FlowLayout: Layout {
             var xOffsets: [Double] = []
             for (index, subview) in zip(subviews.indices, subviews) {
                 let idealSize = subview.sizeThatFits(.unspecified)
-                if index != 0 && widthInRow(index: index, idealWidth: idealSize.width) > remainingWidth {
-                    // Finish the current row without this subview.
-                    finalizeRow(index: max(index - 1, 0), idealSize: idealSize)
+                var clampedSize = idealSize
+                if maxPossibleWidth.isFinite && clampedSize.width > maxPossibleWidth {
+                    clampedSize.width = maxPossibleWidth
                 }
-                addToRow(index: index, idealSize: idealSize)
+                if index != 0 && widthInRow(index: index, idealWidth: clampedSize.width) > remainingWidth {
+                    // Finish the current row without this subview.
+                    finalizeRow(index: max(index - 1, 0), idealSize: clampedSize)
+                }
+                addToRow(index: index, idealSize: clampedSize)
 
                 if index == subviews.count - 1 {
                     // Finish this row; it's either full or we're on the last view anyway.
-                    finalizeRow(index: index, idealSize: idealSize)
+                    finalizeRow(index: index, idealSize: clampedSize)
                 }
             }
 

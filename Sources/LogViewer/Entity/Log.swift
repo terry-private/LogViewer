@@ -1,13 +1,14 @@
 import Foundation
+import OrderedCollections
 
 internal struct Log: Sendable, Hashable, Identifiable {
     let id: String
-    let tags: Set<Tag>
+    let tags: OrderedSet<Tag>
     let fileID: String
     let function: String
     let message: String
     let time: Date
-    init (id: String = UUID().uuidString, message: String, tags: Set<Tag>, fileID: String, function: String, time: Date = Date()) {
+    init (id: String = UUID().uuidString, message: String, tags: OrderedSet<Tag>, fileID: String, function: String, time: Date = Date()) {
         self.id = id
         self.message = message
         self.tags = tags

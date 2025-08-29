@@ -2,12 +2,10 @@ import SwiftUI
 
 internal struct LogRow: View {
     let log: Log
-    let tags: [Tag]
     let isShowFilePath: Bool
     let isShowFunction: Bool
-    init(debugLog: Log, tags: [Tag], isShowFilePath: Bool = true, isShowFunction: Bool = true) {
+    init(debugLog: Log, isShowFilePath: Bool = true, isShowFunction: Bool = true) {
         self.log = debugLog
-        self.tags = tags
         self.isShowFilePath = isShowFilePath
         self.isShowFunction = isShowFunction
     }
@@ -15,23 +13,27 @@ internal struct LogRow: View {
         VStack(alignment: .leading) {
             Text("\(log.timeText)")
                 .foregroundStyle(.secondary)
-            if isShowFilePath {
-                indentedText(log.fileID, systemImage: "document")
+            Grid(alignment: .leading) {
+                if isShowFilePath {
+                    indentedText(log.fileID, systemImage: "document")
+                }
+                if isShowFunction {
+                    indentedText(log.function, systemImage: "function")
+                }
             }
-            if isShowFunction {
-                indentedText(log.function, systemImage: "function")
-            }
-            if !tags.isEmpty {
-                FlowLayout(spacing: 4) {
-                    ForEach(tags, id: \.self) { tag in
+            if !log.tags.isEmpty {
+                FlowLayout(alignment: .leading, spacing: 4) {
+                    ForEach(log.tags, id: \.self) { tag in
                         Text(tag.rawValue)
                             .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
                             .foregroundStyle(.secondary)
                             .background {
                                 RoundedRectangle(cornerRadius: 6)
                                     .stroke(Color.secondary)
                             }
-
+                            .truncationMode(.tail)
+                            .multilineTextAlignment(.leading)
                     }
                 }
             }
@@ -47,7 +49,7 @@ internal struct LogRow: View {
 extension LogRow {
     @ViewBuilder
     func indentedText(_ text: String, systemImage: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+        GridRow(alignment: .firstTextBaseline) {
             Image(systemName: systemImage)
             Text(text)
         }
@@ -78,21 +80,26 @@ private extension Log {
     let debugLogs: [Log] = [
         .init(
             message: "abcdefg",
-            tags: [],
+            tags: ["test", "abc"],
             fileID: "アイウエオ",
             function: "カキクケコ"
         ),
         .init(
             message: "ABCDEFG",
-            tags: [],
+            tags: ["test", "abcdefg", "日本語", "⭐️", "🟦"],
             fileID: "あいうえお",
-            function: "かきくけこ"
+            function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
+        ),
+        .init(
+            message: "ABCDEFG",
+            tags: ["test", "abcdefg", "日本語", "⭐️", "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"],
+            fileID: "あいうえお",
+            function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
         ),
     ]
     List(debugLogs) { debugLog in
         LogRow(
-            debugLog: debugLog,
-            tags: ["api", "error"]
+            debugLog: debugLog
         )
     }
     .scrollContentBackground(.hidden)

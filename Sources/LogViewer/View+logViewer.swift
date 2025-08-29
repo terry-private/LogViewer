@@ -24,7 +24,7 @@ struct CustomLogViewModifier: ViewModifier {
         content
             .overlay {
                 if visible {
-                    LogView(isTransparent: isTransparent) {
+                    LogView {
                         visible = false
                     }
                 }
@@ -39,7 +39,7 @@ struct ShakeLogViewModifier: ViewModifier {
         content
             .overlay {
                 if visible {
-                    LogView(isTransparent: isTransparent) {
+                    LogView {
                         visible = false
                     }
                 }
