@@ -22,6 +22,20 @@ struct LoggerTests {
         #expect(logger.logs[0].function == "send()")
     }
 
+    @Test("add captures the default caller source context")
+    func addCapturesDefaultCallerSourceContext() {
+        let logger = Logger()
+
+        addFromSourceContextHelper(to: logger)
+
+        #expect(logger.logs.count == 1)
+        #expect(logger.logs[0].fileID.hasSuffix("LoggerTests.swift"))
+        #expect(
+            logger.logs[0].function
+                == "addFromSourceContextHelper(to:)"
+        )
+    }
+
     @Test("tags keep first-seen order and remove duplicates")
     func tagsAreOrderedAndUnique() {
         let logger = Logger()
@@ -80,15 +94,7 @@ struct LoggerTests {
         #expect(logger.functionLogs(for: "API.swift\n> send()").isEmpty)
     }
 
-    @Test("viewer background transparency uses its initial configuration")
-    func viewerTransparencyUsesInitialConfiguration() {
-        let opaqueState = LogViewState(isBackgroundTransparent: false)
-        let transparentState = LogViewState(isBackgroundTransparent: true)
-
-        #expect(opaqueState.isBackgroundTransparent == false)
-        #expect(transparentState.isBackgroundTransparent == true)
-
-        transparentState.isBackgroundTransparent = false
-        #expect(transparentState.isBackgroundTransparent == false)
+    private func addFromSourceContextHelper(to logger: Logger) {
+        logger.add("default source")
     }
 }

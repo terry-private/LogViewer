@@ -2,7 +2,7 @@
 id: LV-002
 github_issue: 3
 title: "Add characterization tests and CI-ready verification commands"
-status: done
+status: in-progress
 labels: [testing, maintenance]
 depends_on: [LV-001]
 ---
@@ -25,6 +25,7 @@ depends_on: [LV-001]
 - [x] 主要な現行仕様にテストがある
 - [x] 失敗時に原因が分かるテスト名になっている
 - [x] ビルドとテストを1つの文書化された手順で実行できる
+- [ ] 最低対応stable版Xcodeで検証している
 
 ## Verification
 
@@ -38,5 +39,5 @@ depends_on: [LV-001]
 - iOS 18.0 Deployment Target build: 成功
 - iPhone 16 / iOS 18.0 Simulator tests: 成功
 
-CIサービスへのworkflow追加は、GitHub認証が復旧してからローカル検証と
-同じコマンドを利用して行う。
+Xcode 26 stableでの検証は未完了。Hosted CI workflowは将来追加し、
+ローカル検証と同じコマンドを利用する。

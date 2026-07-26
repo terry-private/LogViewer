@@ -87,7 +87,10 @@ Logger.shared.add("User logged in")
 Logger.shared.add("API Response received", tags: "api", "network")
 
 // Log errors
-Logger.shared.add("Failed to load data: \(error)", tags: "error")
+@MainActor
+func report(_ error: any Error) {
+    Logger.shared.add("Operation failed: \(error)", tags: "error")
+}
 
 // Multiple tags
 Logger.shared.add("User profile updated", tags: "user", "api", "success")
@@ -133,11 +136,17 @@ Logs automatically capture file and function information:
 
 ```swift
 // In UserService.swift
+@MainActor
 func fetchUser(id: String) {
     Logger.shared.add("Fetching user: \(id)", tags: "api", "user")
     // Logs: "Fetching user: 123" with file "UserService.swift" and function "fetchUser(id:)"
 }
 ```
+
+The current `Logger` API is isolated to `MainActor`. Call it from a
+`@MainActor` context or explicitly switch to the main actor. Support for
+recording directly from arbitrary tasks is tracked in
+[Issue #7](https://github.com/terry-private/LogViewer/issues/7).
 
 ### Organize Logs
 

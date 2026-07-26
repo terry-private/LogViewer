@@ -2,7 +2,7 @@
 id: LV-001
 github_issue: 2
 title: "Define supported iOS, Swift, and Xcode versions"
-status: done
+status: in-progress
 labels: [maintenance, documentation]
 depends_on: []
 ---
@@ -21,7 +21,7 @@ depends_on: []
 ## Acceptance criteria
 
 - [x] `Package.swift`とREADMEの要件が一致している
-- [x] stable版Xcodeを基準にしている
+- [ ] 最低対応stable版Xcodeで実際に検証している
 - [x] 対応外プラットフォームの扱いが明記されている
 - [x] ローカル検証用のビルドコマンドが記録されている
 
@@ -46,4 +46,5 @@ Core分割後に、より古いiOSや他プラットフォームへ対応範囲�
 - iOS Simulator、Deployment Target 18.0のbuild: 成功
 - 実行環境: Xcode 27.0 beta / Swift 6.4
 
-最低対応stable版であるXcode 26の自動検証はLV-002で構築する。
+最低対応stable版であるXcode 26での実検証は未完了。Issue #3とPR #16で
+追跡し、mainへのマージ前に結果を記録する。

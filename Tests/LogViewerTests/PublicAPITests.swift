@@ -7,11 +7,15 @@ import LogViewer
 struct PublicAPITests {
     @Test("documented logger calls compile")
     func documentedLoggerCallsCompile() {
-        let logger = LogViewer.Logger.shared
+        let documentedCalls: @MainActor () -> Void = {
+            let logger = LogViewer.Logger.shared
 
-        logger.add("User logged in")
-        logger.add("Request completed", tags: "api", "network")
-        logger.add("Profile updated", tags: ["user", "success"])
+            logger.add("User logged in")
+            logger.add("Request completed", tags: "api", "network")
+            logger.add("Profile updated", tags: ["user", "success"])
+        }
+
+        _ = documentedCalls
     }
 
     @Test("documented view modifiers compile")
@@ -19,6 +23,14 @@ struct PublicAPITests {
         _ = CustomTriggerConsumerView()
         _ = ShakeTriggerConsumerView()
     }
+}
+
+@MainActor
+private func documentedContextCall(id: String) {
+    LogViewer.Logger.shared.add(
+        "Fetching user: \(id)",
+        tags: "api", "user"
+    )
 }
 
 private struct CustomTriggerConsumerView: View {
