@@ -1,28 +1,27 @@
-# Support policy
+# 対応方針
 
-## Supported environment
+## 対応環境
 
-| Component | Minimum | Notes |
+| 項目 | 最低バージョン | 備考 |
 | --- | --- | --- |
-| iOS / iPadOS | 18.0 | The UI uses SwiftUI APIs introduced in iOS 18. |
-| Xcode | 26.0 | Policy baseline. Verification with the minimum stable Xcode is still pending. |
-| Swift tools | 6.2 | Declared by `Package.swift`. |
-| Swift language mode | 6 | Package targets compile in Swift 6 mode. |
+| iOS／iPadOS | 18.0 | 画面機能でiOS 18以降のSwiftUI APIを使用する |
+| Xcode | 26.0 | 安定版を互換性検証の基準とする |
+| Swift tools | 6.2 | `Package.swift`で宣言する |
+| Swift言語モード | 6 | パッケージの各ターゲットをSwift 6モードでコンパイルする |
 
-The minimum versions are compatibility floors, not a promise to support only
-the newest OS. The package should continue to build and run on every iOS and
-iPadOS version from iOS 18 through the SDK version bundled with the supported
-Xcode release.
+最低バージョンは互換性の下限であり、最新OSだけを対応対象とする意味ではない。
+このパッケージはiOS 18から、対応するXcodeに同梱されたSDKのバージョンまで、
+継続してビルド・実行できる状態を目指す。
 
-## Platform scope
+## 対応プラットフォーム
 
-The current `LogViewer` product contains both the log store and its SwiftUI /
-UIKit presentation. Its supported platforms are therefore:
+現在の`LogViewer`製品には、ログ保存機能とSwiftUI／UIKitによる表示機能の
+両方が含まれている。このため、正式な対応対象は次のとおり。
 
 - iOS
 - iPadOS
 
-The following platforms are not currently in the supported build matrix:
+次のプラットフォームは現在の検証対象に含めない。
 
 - macOS
 - Mac Catalyst
@@ -30,54 +29,54 @@ The following platforms are not currently in the supported build matrix:
 - watchOS
 - visionOS
 
-Platform-neutral logging types and storage are planned to move into a separate
-Core target. Platform support can be expanded after that separation without
-making the UIKit presentation part of every consumer.
+将来、プラットフォームに依存しないログ型と保存機能を別の中核ターゲットへ
+分離する予定である。分離後は、UIKitによる表示機能をすべての利用側へ
+含めることなく対応プラットフォームを拡張できる。
 
-## Xcode policy
+## Xcodeの対応方針
 
-- Stable Xcode releases are the compatibility baseline.
-- Beta Xcode builds may be used for early verification, but passing on a beta
-  does not replace verification with the minimum supported stable Xcode.
-- A pull request that intentionally raises a minimum version must update
-  `Package.swift`, `README.md`, this document, and the verification matrix
-  together.
+- 安定版Xcodeを互換性の基準とする。
+- ベータ版Xcodeは早期検証に使用できるが、ベータ版での成功を
+  最低対応の安定版Xcodeによる検証の代わりにはしない。
+- 最低バージョンを意図的に引き上げるプルリクエストでは、
+  `Package.swift`、`README.md`、この文書、検証手順を同時に更新する。
 
-## Intended use and production builds
+## 想定用途と本番ビルド
 
-LogViewer is a developer support tool intended primarily for debug, development,
-TestFlight, and other internal builds.
+LogViewerは、主にデバッグ、開発、TestFlight、そのほかの内部向けビルドで
+使用する開発支援ツールである。
 
-The package does not currently remove itself from release builds. Applications
-that link it into production are responsible for controlling access and
-preventing secrets or personal information from being recorded. Redaction and
-production-access controls are tracked separately in LV-011.
+現在のパッケージは、リリースビルドから自身を自動的に除外しない。
+本番アプリへ組み込む場合は、利用側が表示機能へのアクセスを制御し、
+秘密情報や個人情報を記録しないようにする必要がある。
+秘匿化と本番環境でのアクセス制御は
+[GitHub課題第13号](https://github.com/terry-private/LogViewer/issues/13)で管理する。
 
-## Local verification
+## ローカル検証
 
-Run the complete local verification:
+すべてのローカル検証を実行する。
 
 ```bash
 ./Scripts/verify.sh
 ```
 
-By default, the script selects one compatible iOS Simulator reported by the
-LogViewer scheme. Override it when a specific runtime is required:
+既定では、LogViewerスキームが報告する互換性のあるiOSシミュレーターを
+1台選択する。特定の実行環境が必要な場合は次のように上書きする。
 
 ```bash
-LOGVIEWER_TEST_DESTINATION='platform=iOS Simulator,name=<name>,OS=<version>' \
+LOGVIEWER_TEST_DESTINATION='platform=iOS Simulator,name=<名前>,OS=<バージョン>' \
   ./Scripts/verify.sh
 ```
 
-The script performs the following individual checks.
+スクリプトは、次の検証を個別に実行する。
 
-Inspect the package manifest:
+パッケージ定義を解析する。
 
 ```bash
 swift package dump-package
 ```
 
-Build the package for its minimum supported iOS deployment target:
+最低対応のiOSバージョンを対象にパッケージをビルドする。
 
 ```bash
 xcodebuild \
@@ -87,20 +86,19 @@ xcodebuild \
   build
 ```
 
-Run package tests on an installed iOS 18-or-newer Simulator:
+インストール済みのiOS 18以降のシミュレーターでテストを実行する。
 
 ```bash
 xcodebuild \
   -scheme LogViewer \
-  -destination 'platform=iOS Simulator,name=<simulator name>' \
+  -destination 'platform=iOS Simulator,name=<シミュレーター名>' \
   test
 ```
 
-The minimum iOS version is verified by the generic build. Running tests on the
-minimum iOS runtime requires installing that runtime and setting
-`LOGVIEWER_TEST_DESTINATION` explicitly.
+最低iOSバージョンは汎用ビルドで検証する。最低バージョンのiOS実行環境で
+テストするには、その実行環境をインストールし、
+`LOGVIEWER_TEST_DESTINATION`を明示する必要がある。
 
-Verification with Xcode 26 stable and a future hosted CI workflow remain tracked
-by [Issue #3](https://github.com/terry-private/LogViewer/issues/3). A successful
-run on a beta toolchain is useful early feedback, but is not evidence that the
-minimum stable toolchain has passed.
+対応環境を変更または公開するときは、最低対応の安定版Xcodeで
+この検証を実行する。ベータ版ツールチェーンでの成功は早期の確認には役立つが、
+最低対応の安定版ツールチェーンで成功した証明にはならない。
