@@ -24,11 +24,18 @@ struct CustomLogViewModifier: ViewModifier {
         content
             .overlay {
                 if visible {
-                    LogView {
+                    makeLogView {
                         visible = false
                     }
                 }
             }
+    }
+
+    func makeLogView(dismiss: @escaping () -> Void) -> LogView {
+        LogView(
+            isTransparent: isTransparent,
+            dismiss: dismiss
+        )
     }
 }
 
@@ -39,7 +46,7 @@ struct ShakeLogViewModifier: ViewModifier {
         content
             .overlay {
                 if visible {
-                    LogView {
+                    makeLogView {
                         visible = false
                     }
                 }
@@ -49,6 +56,13 @@ struct ShakeLogViewModifier: ViewModifier {
                     visible.toggle()
                 }
             }
+    }
+
+    func makeLogView(dismiss: @escaping () -> Void) -> LogView {
+        LogView(
+            isTransparent: isTransparent,
+            dismiss: dismiss
+        )
     }
 }
 

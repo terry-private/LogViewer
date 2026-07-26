@@ -9,7 +9,6 @@ public final class Logger {
     internal var tags: OrderedSet<Tag> = []
     internal var fileTagToLogs: [String: [Log]] = [:]
     internal var functionTagToLogs: [String: [Log]] = [:]
-    internal var isBackgroundTransparent: Bool = false
     internal init() {}
 
     internal func fileLogs(for name: String) -> [Log] {
