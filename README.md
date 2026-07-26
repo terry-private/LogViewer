@@ -20,8 +20,19 @@ A beautiful and intuitive debug log viewer for SwiftUI applications.
 ## Requirements
 
 - iOS 18.0+
-- Xcode 16.0+
+- Xcode 26.0+
 - Swift 6.2+
+
+LogViewer currently supports SwiftUI apps running on iOS and iPadOS. macOS,
+Mac Catalyst, tvOS, watchOS, and visionOS are not part of the supported build
+matrix yet.
+
+LogViewer is intended primarily for debug and internal builds. If you include
+it in a production build, review the logs for credentials, personal data, and
+other sensitive information before enabling the viewer.
+
+See [Support Policy](docs/SUPPORT.md) for the complete compatibility policy and
+local verification commands.
 
 ## Installation
 
@@ -31,13 +42,17 @@ Add LogViewer to your project through Xcode:
 
 1. File → Add Package Dependencies...
 2. Enter: `https://github.com/terry-private/LogViewer.git`
-3. Click "Add Package"
+3. Select the `main` branch until the first stable version is released
+4. Click "Add Package"
 
 Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/terry-private/LogViewer.git", from: "1.0.0")
+    .package(
+        url: "https://github.com/terry-private/LogViewer.git",
+        branch: "main"
+    )
 ]
 ```
 
@@ -136,7 +151,9 @@ The viewer provides three view modes:
 Within the log viewer, you can:
 - **Filter by Tags**: Select from automatically collected tags
 - **Search**: Find logs containing specific text
-- **Combine Filters**: Use both tag filtering and search together
+
+Search and tag filtering are currently separate modes. Composable filters are
+planned for a future release.
 
 ## API Reference
 
@@ -154,10 +171,15 @@ func add(_ message: String, tags: Tag..., fileID: String = #fileID, function: St
 
 ```swift
 // Enable log viewer
-func logViewer(on trigger: ShowTrigger) -> some View
+func logViewer(on trigger: ShowTrigger, isTransparent: Bool = false) -> some View
 ```
 
-> **Note**: The `tags` parameter has been deprecated. The viewer now automatically displays all logs and provides filtering within the UI.
+`isTransparent` controls the initial background style. The in-view menu can
+change the style while the viewer is open.
+
+If the importing application also uses `os.Logger`, qualify this package's
+current logger as `LogViewer.Logger`. A less collision-prone logging API is
+planned as part of the v1.0 model redesign.
 
 ### ShowTrigger
 

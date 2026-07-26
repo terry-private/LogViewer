@@ -7,7 +7,15 @@ internal struct LogView: View {
     @State var autoScroll: Bool = true
     let dismiss: () -> Void
 
-    init(dismiss: @escaping () -> Void) {
+    init(
+        isTransparent: Bool = false,
+        dismiss: @escaping () -> Void
+    ) {
+        _viewState = State(
+            initialValue: LogViewState(
+                isBackgroundTransparent: isTransparent
+            )
+        )
         self.dismiss = dismiss
     }
 
