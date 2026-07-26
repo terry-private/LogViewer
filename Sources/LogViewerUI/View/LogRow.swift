@@ -1,3 +1,4 @@
+import LogViewerCore
 import SwiftUI
 
 internal struct LogRow: View {
@@ -104,4 +105,3 @@ private extension Log {
     }
     .scrollContentBackground(.hidden)
 }
-

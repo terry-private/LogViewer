@@ -1,6 +1,6 @@
 import SwiftUI
 import Testing
-@testable import LogViewer
+@testable import LogViewerUI
 
 @Suite("LogViewer presentation")
 @MainActor
