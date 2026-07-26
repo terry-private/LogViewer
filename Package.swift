@@ -51,6 +51,7 @@ let package = Package(
         .testTarget(
             name: "LogViewerUITests",
             dependencies: [
+                "LogViewerCore",
                 "LogViewerUI",
             ]
         ),

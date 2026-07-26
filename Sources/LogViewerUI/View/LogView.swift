@@ -9,11 +9,13 @@ internal struct LogView: View {
     let dismiss: () -> Void
 
     init(
+        store: any LogStore = Logger.shared.store,
         isTransparent: Bool = false,
         dismiss: @escaping () -> Void
     ) {
         _viewState = State(
             initialValue: LogViewState(
+                store: store,
                 isBackgroundTransparent: isTransparent
             )
         )
@@ -80,6 +82,9 @@ internal struct LogView: View {
                 .opacity(viewState.isBackgroundTransparent ? 0.5 : 1)
                 .ignoresSafeArea()
         )
+        .task {
+            await viewState.observeStore()
+        }
     }
 }
 
@@ -216,7 +221,9 @@ extension LogView {
     .logViewer(on: .custom($visible))
     .task {
         for _ in 0..<500 {
-            guard Logger.shared.active else { continue }
+            guard Logger.shared.store.snapshot().isRecordingEnabled else {
+                continue
+            }
             let duration = if Bool.random() {
                 (1...8).randomElement() ?? 1
             } else {

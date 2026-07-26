@@ -2,7 +2,6 @@ import Testing
 @testable import LogViewerCore
 
 @Suite("Log filtering", .serialized)
-@MainActor
 struct LogFilterTests {
     @Test("all preserves every log in insertion order")
     func allPreservesInsertionOrder() {
@@ -89,6 +88,6 @@ struct LogFilterTests {
             fileID: "App.swift",
             function: "start()"
         )
-        return logger.logs
+        return logger.store.snapshot().entries
     }
 }

@@ -1,3 +1,4 @@
+import LogViewerCore
 import SwiftUI
 
 public enum ShowTrigger {
@@ -7,18 +8,34 @@ public enum ShowTrigger {
 
 public extension View {
     @ViewBuilder
-    func logViewer(on trigger: ShowTrigger, isTransparent: Bool = false) -> some View {
+    func logViewer(
+        on trigger: ShowTrigger,
+        store: any LogStore = Logger.shared.store,
+        isTransparent: Bool = false
+    ) -> some View {
         switch trigger {
         case .shake:
-            modifier(ShakeLogViewModifier(isTransparent: isTransparent))
+            modifier(
+                ShakeLogViewModifier(
+                    store: store,
+                    isTransparent: isTransparent
+                )
+            )
         case .custom(let visible):
-            modifier(CustomLogViewModifier(visible: visible, isTransparent: isTransparent))
+            modifier(
+                CustomLogViewModifier(
+                    visible: visible,
+                    store: store,
+                    isTransparent: isTransparent
+                )
+            )
         }
     }
 }
 
 struct CustomLogViewModifier: ViewModifier {
     @Binding var visible: Bool
+    let store: any LogStore
     let isTransparent: Bool
     func body(content: Content) -> some View {
         content
@@ -33,6 +50,7 @@ struct CustomLogViewModifier: ViewModifier {
 
     func makeLogView(dismiss: @escaping () -> Void) -> LogView {
         LogView(
+            store: store,
             isTransparent: isTransparent,
             dismiss: dismiss
         )
@@ -41,6 +59,7 @@ struct CustomLogViewModifier: ViewModifier {
 
 struct ShakeLogViewModifier: ViewModifier {
     @State var visible: Bool = false
+    let store: any LogStore
     let isTransparent: Bool
     func body(content: Content) -> some View {
         content
@@ -60,6 +79,7 @@ struct ShakeLogViewModifier: ViewModifier {
 
     func makeLogView(dismiss: @escaping () -> Void) -> LogView {
         LogView(
+            store: store,
             isTransparent: isTransparent,
             dismiss: dismiss
         )

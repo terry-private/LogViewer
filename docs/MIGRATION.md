@@ -9,7 +9,6 @@
 ```swift
 import LogViewerCore
 
-@MainActor
 func recordSlowResponse() {
     let entry = LogEntry(
         level: .warning,
@@ -29,7 +28,22 @@ func recordSlowResponse() {
 ```
 
 `LogEntry`は`Sendable`なので任意の実行環境で作成できる。
-現在の`Logger.shared.add`は`MainActor`から呼び出す。
+`Logger`と標準の`InMemoryLogStore`も`Sendable`であり、
+`Logger.shared.add`は`MainActor`へ切り替えずに呼び出せる。
+
+保存先を共有状態から分離する場合は、保存機能を明示的に注入する。
+
+```swift
+import LogViewer
+
+let store = InMemoryLogStore()
+let logger = Logger(store: store)
+
+logger.add("独立した保存先へ記録します")
+
+ContentView()
+    .logViewer(on: .shake, store: store)
+```
 
 ## 既存APIとの互換性
 
@@ -45,10 +59,10 @@ Logger.shared.add("処理を開始しました", tags: "debug")
 ## 非推奨化の方針
 
 この変更では、既存の`Logger.shared.add`を非推奨にしない。
-任意の実行環境から記録できる保存機能と、共有インスタンスを使わない注入経路が
-利用可能になるまでは、既存APIが唯一の簡潔な記録方法だからである。
+既存コードを変更せずに新しいスレッド安全な保存機能へ移行できるよう、
+共有APIを互換窓口として維持するためである。
 
-後続の保存機能再設計で置き換え先を提供した後、次の順序で移行する。
+将来、共有APIを置き換える必要が生じた場合は、次の順序で移行する。
 
 1. 新しい保存APIと移行例を公開する
 2. 既存APIから新しい保存APIへの互換変換を維持する
