@@ -235,22 +235,26 @@ extension LogView {
             }
             if Bool.random() {
                 Logger.shared.add(
-                    Log(
+                    LogEntry(
                         message: "test message",
-                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrs"],
-                        fileID: "test.swift",
-                        function: "test()"
+                        source: .init(
+                            fileID: "test.swift",
+                            function: "test()"
+                        ),
+                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrs"]
                     )
                 )
                 count += 1
             }
             if Bool.random() {
                 Logger.shared.add(
-                    Log(
+                    LogEntry(
                         message: "test message",
-                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl"],
-                        fileID: "test.swift",
-                        function: "test()"
+                        source: .init(
+                            fileID: "test.swift",
+                            function: "test()"
+                        ),
+                        tags: ["a", "ab", "abc", "abcde", "abcdefg", "abdcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl"]
                     )
                 )
                 count += 1

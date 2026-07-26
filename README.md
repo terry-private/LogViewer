@@ -191,6 +191,30 @@ func fetchUser(id: String) {
 
 ## API概要
 
+### LogEntry
+
+新しい連携処理では、公開された値型`LogEntry`を使用する。
+
+```swift
+let entry = LogEntry(
+    level: .error,
+    message: "API要求に失敗しました",
+    source: SourceLocation(
+        fileID: #fileID,
+        function: #function,
+        line: #line
+    ),
+    category: "network",
+    tags: ["api", "error"],
+    metadata: ["status": "500"]
+)
+
+Logger.shared.add(entry)
+```
+
+`LogEntry`は`Sendable`かつ`Codable`な値型で、UUIDによる識別子、
+`LogLevel`、本文、`SourceLocation`、任意の分類・タグ・付加情報、記録日時を持つ。
+
 ### Logger
 
 ```swift
@@ -202,9 +226,13 @@ func add(
     _ message: String,
     tags: Tag...,
     fileID: String = #fileID,
-    function: String = #function
+    function: String = #function,
+    line: UInt = #line
 )
 ```
+
+既存の文字列追加APIは、受け取った値を`LogEntry`へ変換して保存する。
+移行と非推奨化の方針は[移行ガイド](docs/MIGRATION.md)を参照。
 
 ### View拡張
 
@@ -220,8 +248,8 @@ func logViewer(
 表示中は画面内のメニューから変更できる。
 
 利用側でも`os.Logger`を使う場合は、このパッケージの現在のロガーを
-`LogViewer.Logger`と明示する。名前が衝突しにくいログAPIへの変更は、
-バージョン1の公開モデル設計で対応する。
+`LogViewer.Logger`と明示する。新しいログ連携処理では`LogEntry`を使用し、
+共有ロガーの置き換えは後続の保存機能再設計で扱う。
 
 ### ShowTrigger
 

@@ -64,7 +64,7 @@ struct LogFilterTests {
         #expect(filtered.map(\.message) == ["Untagged event"])
     }
 
-    private func makeLogs() -> [Log] {
+    private func makeLogs() -> [LogEntry] {
         let logger = Logger()
         logger.add(
             "Request completed",

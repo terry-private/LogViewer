@@ -2,10 +2,10 @@ import LogViewerCore
 import SwiftUI
 
 internal struct LogRow: View {
-    let log: Log
+    let log: LogEntry
     let isShowFilePath: Bool
     let isShowFunction: Bool
-    init(debugLog: Log, isShowFilePath: Bool = true, isShowFunction: Bool = true) {
+    init(debugLog: LogEntry, isShowFilePath: Bool = true, isShowFunction: Bool = true) {
         self.log = debugLog
         self.isShowFilePath = isShowFilePath
         self.isShowFunction = isShowFunction
@@ -16,10 +16,10 @@ internal struct LogRow: View {
                 .foregroundStyle(.secondary)
             Grid(alignment: .leading) {
                 if isShowFilePath {
-                    indentedText(log.fileID, systemImage: "document")
+                    indentedText(log.source.fileID, systemImage: "document")
                 }
                 if isShowFunction {
-                    indentedText(log.function, systemImage: "function")
+                    indentedText(log.source.function, systemImage: "function")
                 }
             }
             if !log.tags.isEmpty {
@@ -69,33 +69,39 @@ extension LogRow {
     }
 }
 
-private extension Log {
+private extension LogEntry {
     var timeText: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SS"
-        return formatter.string(from: self.time)
+        return formatter.string(from: timestamp)
     }
 }
 
 #Preview {
-    let debugLogs: [Log] = [
+    let debugLogs: [LogEntry] = [
         .init(
             message: "abcdefg",
-            tags: ["test", "abc"],
-            fileID: "アイウエオ",
-            function: "カキクケコ"
+            source: .init(
+                fileID: "アイウエオ",
+                function: "カキクケコ"
+            ),
+            tags: ["test", "abc"]
         ),
         .init(
             message: "ABCDEFG",
-            tags: ["test", "abcdefg", "日本語", "⭐️", "🟦"],
-            fileID: "あいうえお",
-            function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
+            source: .init(
+                fileID: "あいうえお",
+                function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
+            ),
+            tags: ["test", "abcdefg", "日本語", "⭐️", "🟦"]
         ),
         .init(
             message: "ABCDEFG",
-            tags: ["test", "abcdefg", "日本語", "⭐️", "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"],
-            fileID: "あいうえお",
-            function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
+            source: .init(
+                fileID: "あいうえお",
+                function: "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"
+            ),
+            tags: ["test", "abcdefg", "日本語", "⭐️", "かきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこかきくけこ"]
         ),
     ]
     List(debugLogs) { debugLog in
