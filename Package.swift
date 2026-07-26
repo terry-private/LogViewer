@@ -58,6 +58,7 @@ let package = Package(
             name: "LogViewerTests",
             dependencies: [
                 "LogViewer",
+                "LogViewerCore",
             ]
         ),
     ]

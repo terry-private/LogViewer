@@ -9,6 +9,7 @@
 | --- | --- |
 | 導入方法と基本的な使い方 | [`README.md`](../README.md) |
 | 対応環境、互換性、検証方法 | [`SUPPORT.md`](SUPPORT.md) |
+| 公開APIの移行と非推奨化 | [`MIGRATION.md`](MIGRATION.md) |
 | 公開APIの詳細 | ソースコードの文書コメントとDocC |
 | 課題、進捗、優先順位、担当、依存関係、完了条件 | [GitHub課題](https://github.com/terry-private/LogViewer/issues) |
 | 変更理由、変更内容、実行した検証 | GitHubプルリクエスト |

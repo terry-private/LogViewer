@@ -18,6 +18,28 @@ struct PublicAPITests {
         _ = documentedCalls
     }
 
+    @Test("公開ログモデルの作成と追加がコンパイルできる")
+    func publicLogModelCompiles() {
+        let entry = LogEntry(
+            level: .error,
+            message: "Request failed",
+            source: SourceLocation(
+                fileID: "APIClient.swift",
+                function: "send()",
+                line: 42
+            ),
+            category: "network",
+            tags: ["api", "error"],
+            metadata: ["status": "500"]
+        )
+
+        let documentedCall: @MainActor () -> Void = {
+            LogViewer.Logger.shared.add(entry)
+        }
+
+        _ = documentedCall
+    }
+
     @Test("documented view modifiers compile")
     func documentedViewModifiersCompile() {
         _ = CustomTriggerConsumerView()

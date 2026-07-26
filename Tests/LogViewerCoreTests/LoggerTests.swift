@@ -18,21 +18,90 @@ struct LoggerTests {
         #expect(logger.logs.count == 1)
         #expect(logger.logs[0].message == "request completed")
         #expect(logger.logs[0].tags == ["network"])
-        #expect(logger.logs[0].fileID == "Networking/APIClient.swift")
-        #expect(logger.logs[0].function == "send()")
+        #expect(logger.logs[0].source.fileID == "Networking/APIClient.swift")
+        #expect(logger.logs[0].source.function == "send()")
     }
 
     @Test("add captures the default caller source context")
     func addCapturesDefaultCallerSourceContext() {
         let logger = Logger()
 
-        addFromSourceContextHelper(to: logger)
+        let expectedLine = addFromSourceContextHelper(to: logger)
 
         #expect(logger.logs.count == 1)
-        #expect(logger.logs[0].fileID.hasSuffix("LoggerTests.swift"))
+        #expect(logger.logs[0].source.fileID.hasSuffix("LoggerTests.swift"))
         #expect(
-            logger.logs[0].function
+            logger.logs[0].source.function
                 == "addFromSourceContextHelper(to:)"
+        )
+        #expect(logger.logs[0].source.line == expectedLine)
+    }
+
+    @Test("文字列追加を公開ログモデルへ変換する")
+    func messageAddConvertsToLogEntry() {
+        let logger = Logger()
+
+        logger.add(
+            "request completed",
+            tags: "network",
+            fileID: "APIClient.swift",
+            function: "send()",
+            line: 24
+        )
+
+        #expect(logger.logs.count == 1)
+        #expect(logger.logs[0].level == .info)
+        #expect(logger.logs[0].category == nil)
+        #expect(logger.logs[0].metadata.isEmpty)
+        #expect(logger.logs[0].source.line == 24)
+    }
+
+    @Test("タグ配列の文字列追加も公開ログモデルへ変換する")
+    func messageAddWithTagArrayConvertsToLogEntry() {
+        let logger = Logger()
+
+        logger.add(
+            "request completed",
+            tags: ["network", "network"],
+            fileID: "APIClient.swift",
+            function: "send()",
+            line: 25
+        )
+
+        #expect(logger.logs.count == 1)
+        #expect(logger.logs[0].level == .info)
+        #expect(logger.logs[0].message == "request completed")
+        #expect(logger.logs[0].category == nil)
+        #expect(logger.logs[0].tags == ["network"])
+        #expect(logger.logs[0].metadata.isEmpty)
+        #expect(logger.logs[0].source.fileID == "APIClient.swift")
+        #expect(logger.logs[0].source.function == "send()")
+        #expect(logger.logs[0].source.line == 25)
+    }
+
+    @Test("公開ログモデルをそのまま追加する")
+    func addsPublicLogEntry() {
+        let logger = Logger()
+        let entry = LogEntry(
+            level: .warning,
+            message: "Slow response",
+            source: .init(
+                fileID: "APIClient.swift",
+                function: "send()",
+                line: 42
+            ),
+            category: "network",
+            tags: ["performance", "network", "performance"],
+            metadata: ["duration": "2.4"]
+        )
+
+        logger.add(entry)
+
+        #expect(logger.logs == [entry])
+        #expect(Array(logger.tags) == ["performance", "network"])
+        #expect(logger.fileLogs(for: "APIClient.swift") == [entry])
+        #expect(
+            logger.functionLogs(for: "APIClient.swift\n> send()") == [entry]
         )
     }
 
@@ -94,7 +163,9 @@ struct LoggerTests {
         #expect(logger.functionLogs(for: "API.swift\n> send()").isEmpty)
     }
 
-    private func addFromSourceContextHelper(to logger: Logger) {
+    private func addFromSourceContextHelper(to logger: Logger) -> UInt {
+        let expectedLine = UInt(#line + 1)
         logger.add("default source")
+        return expectedLine
     }
 }

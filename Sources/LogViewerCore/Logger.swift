@@ -6,24 +6,26 @@ import OrderedCollections
 @Observable
 public final class Logger {
     package var active: Bool = true
-    package var logs: [Log] = []
+    package var logs: [LogEntry] = []
     package var tags: OrderedSet<Tag> = []
-    package var fileTagToLogs: [String: [Log]] = [:]
-    package var functionTagToLogs: [String: [Log]] = [:]
+    package var fileTagToLogs: [String: [LogEntry]] = [:]
+    package var functionTagToLogs: [String: [LogEntry]] = [:]
     package init() {}
 
-    package func fileLogs(for name: String) -> [Log] {
+    package func fileLogs(for name: String) -> [LogEntry] {
         fileTagToLogs[name] ?? []
     }
-    package func functionLogs(for functionTag: String) -> [Log] {
+    package func functionLogs(for functionTag: String) -> [LogEntry] {
         functionTagToLogs[functionTag] ?? []
     }
-    package func add(_ log: Log) {
+    /// 公開ログモデルを保存する。
+    public func add(_ entry: LogEntry) {
         guard active else { return }
-        logs.append(log)
-        tags.formUnion(log.tags)
-        fileTagToLogs[log.fileID, default: []].append(log)
-        functionTagToLogs[log.fileID + "\n> " + log.function, default: []].append(log)
+        logs.append(entry)
+        tags.formUnion(entry.tags)
+        fileTagToLogs[entry.source.fileID, default: []].append(entry)
+        let functionKey = entry.source.fileID + "\n> " + entry.source.function
+        functionTagToLogs[functionKey, default: []].append(entry)
     }
     package func deleteAll() {
         logs.removeAll()
@@ -34,15 +36,48 @@ public final class Logger {
 }
 
 public extension Logger {
+    /// 互換性のために提供する共有ロガー。
     static let shared: Logger = .init()
 
-    func add(_ message: String, tags: Tag..., fileID: String = #fileID, function: String = #function) {
-        let log = Log(message: message, tags: OrderedSet(tags), fileID: fileID, function: function)
-        add(log)
+    /// 文字列と可変長タグからログを作成して保存する互換API。
+    func add(
+        _ message: String,
+        tags: Tag...,
+        fileID: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        add(
+            LogEntry(
+                message: message,
+                source: SourceLocation(
+                    fileID: fileID,
+                    function: function,
+                    line: line
+                ),
+                tags: tags
+            )
+        )
     }
 
-    func add(_ message: String, tags: [Tag], fileID: String = #fileID, function: String = #function) {
-        let log = Log(message: message, tags: OrderedSet(tags), fileID: fileID, function: function)
-        add(log)
+    /// 文字列とタグ配列からログを作成して保存する互換API。
+    func add(
+        _ message: String,
+        tags: [Tag],
+        fileID: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
+    ) {
+        add(
+            LogEntry(
+                message: message,
+                source: SourceLocation(
+                    fileID: fileID,
+                    function: function,
+                    line: line
+                ),
+                tags: tags
+            )
+        )
     }
 }

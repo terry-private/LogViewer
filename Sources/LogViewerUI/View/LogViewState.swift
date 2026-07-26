@@ -21,7 +21,7 @@ internal final class LogViewState {
         self.isBackgroundTransparent = isBackgroundTransparent
     }
 
-    var displayLogs: [Log] {
+    var displayLogs: [LogEntry] {
         switch selectedPeriod {
         case .all: logs
         case .file:
@@ -44,13 +44,13 @@ internal final class LogViewState {
         Array(store.tags)
     }
     internal var active: Bool { store.active }
-    internal var logs: [Log] { store.logs.filter(by: filter) }
+    internal var logs: [LogEntry] { store.logs.filter(by: filter) }
     internal var fileTags: [String] { Array(store.fileTagToLogs.keys) }
     internal var functionTags: [String] { Array(store.functionTagToLogs.keys) }
-    internal func fileLogs(for name: String) -> [Log] {
+    internal func fileLogs(for name: String) -> [LogEntry] {
         store.fileTagToLogs[name]?.filter(by: filter) ?? []
     }
-    internal func functionLogs(for functionTag: String) -> [Log] {
+    internal func functionLogs(for functionTag: String) -> [LogEntry] {
         store.functionTagToLogs[functionTag]?.filter(by: filter) ?? []
     }
     internal func toggleActive() {
