@@ -1,5 +1,5 @@
 import Testing
-@testable import LogViewer
+@testable import LogViewerCore
 
 @Suite("Logger", .serialized)
 @MainActor

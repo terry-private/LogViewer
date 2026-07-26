@@ -7,10 +7,13 @@ let package = Package(
     name: "LogViewer",
     platforms: [.iOS(.v18)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "LogViewer",
             targets: ["LogViewer"]
+        ),
+        .library(
+            name: "LogViewerCore",
+            targets: ["LogViewerCore"]
         ),
     ],
     dependencies: [
@@ -20,18 +23,41 @@ let package = Package(
       ),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "LogViewerCore",
+            dependencies: [
+                .product(name: "OrderedCollections", package: "swift-collections"),
+            ]
+        ),
+        .target(
+            name: "LogViewerUI",
+            dependencies: [
+                "LogViewerCore",
+            ]
+        ),
         .target(
             name: "LogViewer",
             dependencies: [
-                .product(name: "OrderedCollections", package: "swift-collections"),
+                "LogViewerCore",
+                "LogViewerUI",
+            ]
+        ),
+        .testTarget(
+            name: "LogViewerCoreTests",
+            dependencies: [
+                "LogViewerCore",
+            ]
+        ),
+        .testTarget(
+            name: "LogViewerUITests",
+            dependencies: [
+                "LogViewerUI",
             ]
         ),
         .testTarget(
             name: "LogViewerTests",
             dependencies: [
-                "LogViewer"
+                "LogViewer",
             ]
         ),
     ]

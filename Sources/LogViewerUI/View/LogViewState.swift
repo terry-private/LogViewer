@@ -1,3 +1,4 @@
+import LogViewerCore
 import Observation
 
 @MainActor

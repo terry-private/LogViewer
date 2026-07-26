@@ -38,7 +38,22 @@ swift package dump-package >/dev/null
 
 xcodebuild \
   -quiet \
+  -scheme LogViewerCore \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
   -scheme LogViewer \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewer \
+  -configuration Release \
   -destination "generic/platform=iOS Simulator" \
   IPHONEOS_DEPLOYMENT_TARGET=18.0 \
   build

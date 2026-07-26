@@ -1,3 +1,4 @@
+import LogViewerCore
 import Observation
 import SwiftUI
 
@@ -198,6 +199,7 @@ extension LogView {
     }
 }
 
+#if DEBUG
 #Preview {
     @Previewable @State var visible: Bool = true
     LinearGradient(
@@ -256,3 +258,4 @@ extension LogView {
         }
     }
 }
+#endif

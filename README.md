@@ -38,6 +38,21 @@ LogViewerは、主にデバッグおよび内部向けビルドでの使用を�
 文書の管理場所と更新規則は
 [ドキュメント方針](docs/README.md)を参照。
 
+## モジュール構成
+
+パッケージ内部は次の3ターゲットに分かれている。
+
+- `LogViewerCore` — ログ型、保存、絞り込み
+- `LogViewerUI` — SwiftUI／UIKitによる表示。`LogViewerCore`だけに依存
+- `LogViewer` — 既存の`import LogViewer`を維持する互換入口
+
+通常の利用側はこれまでどおり`LogViewer`製品を追加し、`import LogViewer`を
+使用する。画面を必要としないiOS／iPadOS向けの処理では、
+`LogViewerCore`製品だけを選択できる。
+
+中核ターゲットにはSwiftUI／UIKitを含めず、画面機能から中核機能への
+一方向依存を維持する。
+
 ## 導入方法
 
 ### Swift Package Manager

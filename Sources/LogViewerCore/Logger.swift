@@ -1,30 +1,31 @@
 import Foundation
+import Observation
 import OrderedCollections
 
 @MainActor
 @Observable
 public final class Logger {
-    internal var active: Bool = true
-    internal var logs: [Log] = []
-    internal var tags: OrderedSet<Tag> = []
-    internal var fileTagToLogs: [String: [Log]] = [:]
-    internal var functionTagToLogs: [String: [Log]] = [:]
-    internal init() {}
+    package var active: Bool = true
+    package var logs: [Log] = []
+    package var tags: OrderedSet<Tag> = []
+    package var fileTagToLogs: [String: [Log]] = [:]
+    package var functionTagToLogs: [String: [Log]] = [:]
+    package init() {}
 
-    internal func fileLogs(for name: String) -> [Log] {
+    package func fileLogs(for name: String) -> [Log] {
         fileTagToLogs[name] ?? []
     }
-    internal func functionLogs(for functionTag: String) -> [Log] {
+    package func functionLogs(for functionTag: String) -> [Log] {
         functionTagToLogs[functionTag] ?? []
     }
-    internal func add(_ log: Log) {
+    package func add(_ log: Log) {
         guard active else { return }
         logs.append(log)
         tags.formUnion(log.tags)
         fileTagToLogs[log.fileID, default: []].append(log)
         functionTagToLogs[log.fileID + "\n> " + log.function, default: []].append(log)
     }
-    internal func deleteAll() {
+    package func deleteAll() {
         logs.removeAll()
         tags.removeAll()
         fileTagToLogs.removeAll()
