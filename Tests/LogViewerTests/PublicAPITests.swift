@@ -7,7 +7,7 @@ import LogViewer
 struct PublicAPITests {
     @Test("documented logger calls compile")
     func documentedLoggerCallsCompile() {
-        let documentedCalls: @MainActor () -> Void = {
+        let documentedCalls: @Sendable () -> Void = {
             let logger = LogViewer.Logger.shared
 
             logger.add("User logged in")
@@ -33,7 +33,7 @@ struct PublicAPITests {
             metadata: ["status": "500"]
         )
 
-        let documentedCall: @MainActor () -> Void = {
+        let documentedCall: @Sendable () -> Void = {
             LogViewer.Logger.shared.add(entry)
         }
 

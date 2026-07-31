@@ -4,7 +4,8 @@ import Observation
 @MainActor
 @Observable
 internal final class LogViewState {
-    private var store: Logger = .shared
+    private let store: any LogStore
+    private var snapshot: LogStoreSnapshot
     var selectedPeriod = Period.all
     var filter: LogFilter = .all
     internal var searchKey: String = ""
@@ -14,10 +15,11 @@ internal final class LogViewState {
     var isBackgroundTransparent: Bool
 
     init(
-        store: Logger = .shared,
+        store: any LogStore = Logger.shared.store,
         isBackgroundTransparent: Bool = false
     ) {
         self.store = store
+        snapshot = store.snapshot()
         self.isBackgroundTransparent = isBackgroundTransparent
     }
 
@@ -41,22 +43,58 @@ internal final class LogViewState {
         }
     }
     internal var tags: [Tag] {
-        Array(store.tags)
+        var seen: Set<Tag> = []
+        return snapshot.entries
+            .flatMap(\.tags)
+            .filter { seen.insert($0).inserted }
     }
-    internal var active: Bool { store.active }
-    internal var logs: [LogEntry] { store.logs.filter(by: filter) }
-    internal var fileTags: [String] { Array(store.fileTagToLogs.keys) }
-    internal var functionTags: [String] { Array(store.functionTagToLogs.keys) }
+    internal var active: Bool { snapshot.isRecordingEnabled }
+    internal var logs: [LogEntry] {
+        snapshot.entries.filter(by: filter)
+    }
+    internal var fileTags: [String] {
+        orderedUnique(
+            snapshot.entries.map(\.source.fileID)
+        )
+    }
+    internal var functionTags: [String] {
+        orderedUnique(
+            snapshot.entries.map {
+                $0.source.fileID + "\n> " + $0.source.function
+            }
+        )
+    }
     internal func fileLogs(for name: String) -> [LogEntry] {
-        store.fileTagToLogs[name]?.filter(by: filter) ?? []
+        snapshot.entries
+            .filter { $0.source.fileID == name }
+            .filter(by: filter)
     }
     internal func functionLogs(for functionTag: String) -> [LogEntry] {
-        store.functionTagToLogs[functionTag]?.filter(by: filter) ?? []
+        snapshot.entries
+            .filter {
+                $0.source.fileID + "\n> " + $0.source.function
+                    == functionTag
+            }
+            .filter(by: filter)
     }
     internal func toggleActive() {
-        store.active.toggle()
+        store.setRecordingEnabled(!snapshot.isRecordingEnabled)
     }
     internal func deleteLogs() {
         store.deleteAll()
+    }
+
+    internal func observeStore() async {
+        for await snapshot in store.updates() {
+            guard !Task.isCancelled else { return }
+            self.snapshot = snapshot
+        }
+    }
+
+    private func orderedUnique<Value: Hashable>(
+        _ values: [Value]
+    ) -> [Value] {
+        var seen: Set<Value> = []
+        return values.filter { seen.insert($0).inserted }
     }
 }

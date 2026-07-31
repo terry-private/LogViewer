@@ -106,7 +106,6 @@ Logger.shared.add("ユーザーがログインしました")
 Logger.shared.add("API応答を受信しました", tags: "api", "network")
 
 // エラーの記録
-@MainActor
 func report(_ error: any Error) {
     Logger.shared.add("処理に失敗しました: \(error)", tags: "error")
 }
@@ -156,7 +155,6 @@ ContentView()
 
 ```swift
 // UserService.swift内
-@MainActor
 func fetchUser(id: String) {
     Logger.shared.add(
         "ユーザーを取得します: \(id)",
@@ -165,10 +163,34 @@ func fetchUser(id: String) {
 }
 ```
 
-現在の`Logger` APIは`MainActor`へ分離されている。`@MainActor`の実行環境から
-呼び出すか、明示的にメインアクターへ切り替えること。
-任意のタスクから直接記録する対応は
-[GitHub課題第7号](https://github.com/terry-private/LogViewer/issues/7)で管理する。
+`Logger`と標準の`InMemoryLogStore`は`Sendable`であり、
+`MainActor`へ切り替えずに任意のタスクから記録できる。
+
+```swift
+Task.detached {
+    Logger.shared.add("バックグラウンド処理を開始しました")
+}
+```
+
+### 保存機能の差し替え
+
+アプリや画面ごとにログを分離する場合は、同じ`LogStore`を`Logger`と
+ログ画面へ渡す。
+
+```swift
+let store = InMemoryLogStore()
+let logger = Logger(store: store)
+
+logger.add("この画面専用のログ")
+
+ContentView()
+    .logViewer(
+        on: .shake,
+        store: store
+    )
+```
+
+引数を省略したログ画面は`Logger.shared.store`を使用する。
 
 ### ログの整理
 
@@ -221,6 +243,10 @@ Logger.shared.add(entry)
 // 共有インスタンス
 Logger.shared
 
+// 差し替え可能な保存機能
+let store = InMemoryLogStore()
+let logger = Logger(store: store)
+
 // 任意のタグを付けてログを追加
 func add(
     _ message: String,
@@ -232,6 +258,9 @@ func add(
 ```
 
 既存の文字列追加APIは、受け取った値を`LogEntry`へ変換して保存する。
+`Logger`は保存機能を持たない軽量な窓口で、実際の状態は`LogStore`が管理する。
+標準の`InMemoryLogStore`は並行する追加、一時停止、削除を同期し、
+`AsyncStream<LogStoreSnapshot>`で画面へ変更を通知する。
 移行と非推奨化の方針は[移行ガイド](docs/MIGRATION.md)を参照。
 
 ### View拡張
@@ -240,6 +269,7 @@ func add(
 // ログ画面を有効化
 func logViewer(
     on trigger: ShowTrigger,
+    store: any LogStore = Logger.shared.store,
     isTransparent: Bool = false
 ) -> some View
 ```
@@ -249,7 +279,7 @@ func logViewer(
 
 利用側でも`os.Logger`を使う場合は、このパッケージの現在のロガーを
 `LogViewer.Logger`と明示する。新しいログ連携処理では`LogEntry`を使用し、
-共有ロガーの置き換えは後続の保存機能再設計で扱う。
+画面単位で分離するときは`LogStore`を注入する。
 
 ### ShowTrigger
 

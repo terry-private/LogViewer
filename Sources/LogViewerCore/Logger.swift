@@ -1,44 +1,33 @@
-import Foundation
-import Observation
-import OrderedCollections
+/// 既存の簡潔な記録APIと、差し替え可能な保存機能をつなぐ窓口。
+public final class Logger: Sendable {
+    /// 互換性のために提供する共有ロガー。
+    public static let shared = Logger()
 
-@MainActor
-@Observable
-public final class Logger {
-    package var active: Bool = true
-    package var logs: [LogEntry] = []
-    package var tags: OrderedSet<Tag> = []
-    package var fileTagToLogs: [String: [LogEntry]] = [:]
-    package var functionTagToLogs: [String: [LogEntry]] = [:]
-    package init() {}
+    /// このロガーが使用する保存機能。
+    public let store: any LogStore
 
-    package func fileLogs(for name: String) -> [LogEntry] {
-        fileTagToLogs[name] ?? []
+    /// 指定した保存機能を使うロガーを作成する。
+    public init(store: any LogStore = InMemoryLogStore()) {
+        self.store = store
     }
-    package func functionLogs(for functionTag: String) -> [LogEntry] {
-        functionTagToLogs[functionTag] ?? []
-    }
+
     /// 公開ログモデルを保存する。
     public func add(_ entry: LogEntry) {
-        guard active else { return }
-        logs.append(entry)
-        tags.formUnion(entry.tags)
-        fileTagToLogs[entry.source.fileID, default: []].append(entry)
-        let functionKey = entry.source.fileID + "\n> " + entry.source.function
-        functionTagToLogs[functionKey, default: []].append(entry)
+        store.add(entry)
     }
-    package func deleteAll() {
-        logs.removeAll()
-        tags.removeAll()
-        fileTagToLogs.removeAll()
-        functionTagToLogs.removeAll()
+
+    /// 新しいログを保存するかどうかを設定する。
+    public func setRecordingEnabled(_ isEnabled: Bool) {
+        store.setRecordingEnabled(isEnabled)
+    }
+
+    /// 現在保存されているログをすべて削除する。
+    public func deleteAll() {
+        store.deleteAll()
     }
 }
 
 public extension Logger {
-    /// 互換性のために提供する共有ロガー。
-    static let shared: Logger = .init()
-
     /// 文字列と可変長タグからログを作成して保存する互換API。
     func add(
         _ message: String,

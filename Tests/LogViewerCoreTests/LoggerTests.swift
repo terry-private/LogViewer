@@ -1,10 +1,9 @@
 import Testing
 @testable import LogViewerCore
 
-@Suite("Logger", .serialized)
-@MainActor
+@Suite("Logger互換API", .serialized)
 struct LoggerTests {
-    @Test("add stores a log and its source context")
+    @Test("文字列と発生元をログとして保存する")
     func addStoresLogAndSourceContext() {
         let logger = Logger()
 
@@ -15,29 +14,31 @@ struct LoggerTests {
             function: "send()"
         )
 
-        #expect(logger.logs.count == 1)
-        #expect(logger.logs[0].message == "request completed")
-        #expect(logger.logs[0].tags == ["network"])
-        #expect(logger.logs[0].source.fileID == "Networking/APIClient.swift")
-        #expect(logger.logs[0].source.function == "send()")
+        let logs = logger.store.snapshot().entries
+        #expect(logs.count == 1)
+        #expect(logs[0].message == "request completed")
+        #expect(logs[0].tags == ["network"])
+        #expect(logs[0].source.fileID == "Networking/APIClient.swift")
+        #expect(logs[0].source.function == "send()")
     }
 
-    @Test("add captures the default caller source context")
+    @Test("既定の呼び出し元情報を取得する")
     func addCapturesDefaultCallerSourceContext() {
         let logger = Logger()
 
         let expectedLine = addFromSourceContextHelper(to: logger)
 
-        #expect(logger.logs.count == 1)
-        #expect(logger.logs[0].source.fileID.hasSuffix("LoggerTests.swift"))
+        let logs = logger.store.snapshot().entries
+        #expect(logs.count == 1)
+        #expect(logs[0].source.fileID.hasSuffix("LoggerTests.swift"))
         #expect(
-            logger.logs[0].source.function
+            logs[0].source.function
                 == "addFromSourceContextHelper(to:)"
         )
-        #expect(logger.logs[0].source.line == expectedLine)
+        #expect(logs[0].source.line == expectedLine)
     }
 
-    @Test("文字列追加を公開ログモデルへ変換する")
+    @Test("可変長タグの文字列追加を公開ログモデルへ変換する")
     func messageAddConvertsToLogEntry() {
         let logger = Logger()
 
@@ -49,14 +50,15 @@ struct LoggerTests {
             line: 24
         )
 
-        #expect(logger.logs.count == 1)
-        #expect(logger.logs[0].level == .info)
-        #expect(logger.logs[0].category == nil)
-        #expect(logger.logs[0].metadata.isEmpty)
-        #expect(logger.logs[0].source.line == 24)
+        let logs = logger.store.snapshot().entries
+        #expect(logs.count == 1)
+        #expect(logs[0].level == .info)
+        #expect(logs[0].category == nil)
+        #expect(logs[0].metadata.isEmpty)
+        #expect(logs[0].source.line == 24)
     }
 
-    @Test("タグ配列の文字列追加も公開ログモデルへ変換する")
+    @Test("タグ配列の文字列追加を公開ログモデルへ変換する")
     func messageAddWithTagArrayConvertsToLogEntry() {
         let logger = Logger()
 
@@ -68,15 +70,16 @@ struct LoggerTests {
             line: 25
         )
 
-        #expect(logger.logs.count == 1)
-        #expect(logger.logs[0].level == .info)
-        #expect(logger.logs[0].message == "request completed")
-        #expect(logger.logs[0].category == nil)
-        #expect(logger.logs[0].tags == ["network"])
-        #expect(logger.logs[0].metadata.isEmpty)
-        #expect(logger.logs[0].source.fileID == "APIClient.swift")
-        #expect(logger.logs[0].source.function == "send()")
-        #expect(logger.logs[0].source.line == 25)
+        let logs = logger.store.snapshot().entries
+        #expect(logs.count == 1)
+        #expect(logs[0].level == .info)
+        #expect(logs[0].message == "request completed")
+        #expect(logs[0].category == nil)
+        #expect(logs[0].tags == ["network"])
+        #expect(logs[0].metadata.isEmpty)
+        #expect(logs[0].source.fileID == "APIClient.swift")
+        #expect(logs[0].source.function == "send()")
+        #expect(logs[0].source.line == 25)
     }
 
     @Test("公開ログモデルをそのまま追加する")
@@ -91,79 +94,72 @@ struct LoggerTests {
                 line: 42
             ),
             category: "network",
-            tags: ["performance", "network", "performance"],
+            tags: ["performance"],
             metadata: ["duration": "2.4"]
         )
 
         logger.add(entry)
 
-        #expect(logger.logs == [entry])
-        #expect(Array(logger.tags) == ["performance", "network"])
-        #expect(logger.fileLogs(for: "APIClient.swift") == [entry])
+        #expect(logger.store.snapshot().entries == [entry])
+    }
+
+    @Test("注入した保存機能だけへ追加する")
+    func usesInjectedStore() {
+        let firstStore = InMemoryLogStore()
+        let secondStore = InMemoryLogStore()
+        let firstLogger = Logger(store: firstStore)
+        let secondLogger = Logger(store: secondStore)
+
+        firstLogger.add("first")
+        secondLogger.add("second")
+
         #expect(
-            logger.functionLogs(for: "APIClient.swift\n> send()") == [entry]
+            firstStore.snapshot().entries.map(\.message) == ["first"]
+        )
+        #expect(
+            secondStore.snapshot().entries.map(\.message) == ["second"]
         )
     }
 
-    @Test("tags keep first-seen order and remove duplicates")
-    func tagsAreOrderedAndUnique() {
-        let logger = Logger()
+    @Test("記録状態と削除を注入した保存機能へ委譲する")
+    func delegatesRecordingControlAndDeletion() {
+        let store = InMemoryLogStore()
+        let logger = Logger(store: store)
 
-        logger.add("first", tags: ["network", "api"])
-        logger.add("second", tags: ["api", "ui"])
+        logger.setRecordingEnabled(false)
+        logger.add("paused")
+        logger.setRecordingEnabled(true)
+        logger.add("resumed")
 
-        #expect(Array(logger.tags) == ["network", "api", "ui"])
-    }
-
-    @Test("logs are grouped by file and by file plus function")
-    func logsAreGroupedBySource() {
-        let logger = Logger()
-
-        logger.add("first", fileID: "Feature.swift", function: "load()")
-        logger.add("second", fileID: "Feature.swift", function: "save()")
-        logger.add("third", fileID: "Other.swift", function: "load()")
-
-        #expect(logger.fileLogs(for: "Feature.swift").map(\.message) == ["first", "second"])
         #expect(
-            logger.functionLogs(for: "Feature.swift\n> load()").map(\.message)
-                == ["first"]
-        )
-        #expect(
-            logger.functionLogs(for: "Feature.swift\n> save()").map(\.message)
-                == ["second"]
-        )
-    }
-
-    @Test("paused logger ignores new logs")
-    func pausedLoggerIgnoresNewLogs() {
-        let logger = Logger()
-        logger.add("before pause")
-
-        logger.active = false
-        logger.add("while paused")
-
-        #expect(logger.logs.map(\.message) == ["before pause"])
-    }
-
-    @Test("deleteAll clears logs, tags, and source indexes")
-    func deleteAllClearsEveryIndex() {
-        let logger = Logger()
-        logger.add(
-            "message",
-            tags: "api",
-            fileID: "API.swift",
-            function: "send()"
+            store.snapshot().entries.map(\.message) == ["resumed"]
         )
 
         logger.deleteAll()
 
-        #expect(logger.logs.isEmpty)
-        #expect(logger.tags.isEmpty)
-        #expect(logger.fileLogs(for: "API.swift").isEmpty)
-        #expect(logger.functionLogs(for: "API.swift\n> send()").isEmpty)
+        #expect(store.snapshot().entries.isEmpty)
     }
 
-    private func addFromSourceContextHelper(to logger: Logger) -> UInt {
+    @Test("共有ロガーから共有保存機能を利用する")
+    func sharedLoggerUsesSharedStore() {
+        Logger.shared.setRecordingEnabled(true)
+        Logger.shared.deleteAll()
+        defer {
+            Logger.shared.setRecordingEnabled(true)
+            Logger.shared.deleteAll()
+        }
+
+        Logger.shared.add("shared")
+
+        #expect(
+            Logger.shared.store.snapshot().entries.map(\.message)
+                == ["shared"]
+        )
+    }
+
+    private func addFromSourceContextHelper(
+        to logger: Logger
+    ) -> UInt {
         let expectedLine = UInt(#line + 1)
         logger.add("default source")
         return expectedLine

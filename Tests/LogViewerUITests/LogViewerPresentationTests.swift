@@ -1,5 +1,6 @@
 import SwiftUI
 import Testing
+import LogViewerCore
 @testable import LogViewerUI
 
 @Suite("LogViewer presentation")
@@ -51,6 +52,96 @@ struct LogViewerPresentationTests {
             logView?.viewState.isBackgroundTransparent
                 == isTransparent
         )
+    }
+
+    @Test(
+        "各表示方法が注入された保存機能の後続変更を反映する",
+        .timeLimit(.minutes(1))
+    )
+    func eachViewerUsesItsInjectedStore() async throws {
+        let firstStore = InMemoryLogStore()
+        let secondStore = InMemoryLogStore()
+        firstStore.add(makeEntry(message: "first"))
+        secondStore.add(makeEntry(message: "second"))
+
+        let firstView = Color.clear.logViewer(
+            on: .custom(.constant(true)),
+            store: firstStore
+        )
+        let secondView = Color.clear.logViewer(
+            on: .shake,
+            store: secondStore
+        )
+
+        let firstModifier = try #require(findValue(
+            of: CustomLogViewModifier.self,
+            in: firstView
+        ))
+        let secondModifier = try #require(findValue(
+            of: ShakeLogViewModifier.self,
+            in: secondView
+        ))
+        let firstLogView = firstModifier.makeLogView {}
+        let secondLogView = secondModifier.makeLogView {}
+
+        #expect(
+            firstLogView.viewState.logs.map(\.message)
+                == ["first"]
+        )
+        #expect(
+            secondLogView.viewState.logs.map(\.message)
+                == ["second"]
+        )
+
+        let observationTask = Task {
+            await firstLogView.viewState.observeStore()
+        }
+        defer {
+            observationTask.cancel()
+        }
+
+        firstStore.add(makeEntry(message: "updated"))
+        await waitUntil {
+            firstLogView.viewState.logs.map(\.message)
+                == ["first", "updated"]
+        }
+        #expect(
+            firstLogView.viewState.logs.map(\.message)
+                == ["first", "updated"]
+        )
+
+        firstStore.setRecordingEnabled(false)
+        await waitUntil {
+            !firstLogView.viewState.active
+        }
+        #expect(!firstLogView.viewState.active)
+
+        firstStore.deleteAll()
+        await waitUntil {
+            firstLogView.viewState.logs.isEmpty
+        }
+        #expect(firstLogView.viewState.logs.isEmpty)
+    }
+
+    private func makeEntry(message: String) -> LogEntry {
+        LogEntry(
+            message: message,
+            source: SourceLocation(
+                fileID: "Test.swift",
+                function: "run()",
+                line: 1
+            )
+        )
+    }
+
+    private func waitUntil(
+        _ condition: () -> Bool
+    ) async {
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(1))
+        while !condition(), clock.now < deadline {
+            await Task.yield()
+        }
     }
 
     private func findValue<Value>(
