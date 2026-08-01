@@ -134,6 +134,26 @@ struct ContentView: View {
 }
 ```
 
+### シートより前面への表示
+
+標準の`.overlay`は、修飾したViewの階層内へログ画面を表示する。
+シートや全画面表示より前面へ出す必要がある場合は、`.window`を指定する。
+
+```swift
+ContentView()
+    .logViewer(
+        on: .custom($showLogs),
+        presentation: .window
+    )
+```
+
+`.window`は修飾したViewが属する`UIWindowScene`へ専用ウインドウを1つだけ作る。
+`.custom`では複数ウインドウ対応アプリでも、操作元とは別の場面へ表示しない。
+ログ画面を閉じると、表示前にキーだったウインドウへキー状態を戻す。
+
+現在のシェイク通知はアプリ全体へ配信される。複数の場面に`.shake`を設定した場合の
+場面分離は[GitHub課題第11号](https://github.com/terry-private/LogViewer/issues/11)で扱う。
+
 ## 詳しい使い方
 
 ### タグによる絞り込み
@@ -286,11 +306,13 @@ func add(
 // ログ画面を有効化
 func logViewer(
     on trigger: ShowTrigger,
+    presentation: LogViewerPresentationStyle = .overlay,
     store: any LogStore = Logger.shared.store,
     isTransparent: Bool = false
 ) -> some View
 ```
 
+`presentation`は標準の`.overlay`と、シートより前面へ出す`.window`を選べる。
 `isTransparent`は、ログ画面を開いたときの背景表示を指定する。
 表示中は画面内のメニューから変更できる。
 

@@ -61,6 +61,24 @@ let logger = Logger(store: store)
 
 `maximumEntryCount`は0以上を指定する。`0`の場合はログを保持しない。
 
+## 専用ウインドウ表示
+
+既存の`.logViewer(on:)`は引き続き`.overlay`で表示するため、動作は変わらない。
+シート、全画面表示、警告表示より前面へログ画面を表示する場合は、
+`presentation: .window`を明示する。
+
+```swift
+ContentView()
+    .logViewer(
+        on: .custom($showLogs),
+        presentation: .window
+    )
+```
+
+専用ウインドウは呼び出し元Viewが属する`UIWindowScene`ごとに管理される。
+閉じると表示前のキーウインドウへ戻る。現在のシェイク通知はアプリ全体へ
+配信されるため、複数場面での`.shake`の分離はGitHub課題第11号で扱う。
+
 ## 既存APIとの互換性
 
 次の既存コードは引き続き利用できる。
