@@ -6,8 +6,18 @@ import Observation
 internal final class LogViewState {
     private let store: any LogStore
     private var snapshot: LogStoreSnapshot
+    private var cachedTags: [Tag] = []
+    private var cachedLogs: [LogEntry] = []
+    private var cachedFileTags: [String] = []
+    private var cachedFunctionTags: [String] = []
+    private var cachedFileLogIndices: [String: [Int]] = [:]
+    private var cachedFunctionLogIndices: [String: [Int]] = [:]
     var selectedPeriod = Period.all
-    var filter: LogFilter = .all
+    var filter: LogFilter = .all {
+        didSet {
+            rebuildFilteredCaches()
+        }
+    }
     internal var searchKey: String = ""
     let selectedTag: Set<Tag> = []
     var fileExpands: String?
@@ -21,6 +31,7 @@ internal final class LogViewState {
         self.store = store
         snapshot = store.snapshot()
         self.isBackgroundTransparent = isBackgroundTransparent
+        rebuildSnapshotCaches()
     }
 
     var displayLogs: [LogEntry] {
@@ -43,39 +54,23 @@ internal final class LogViewState {
         }
     }
     internal var tags: [Tag] {
-        var seen: Set<Tag> = []
-        return snapshot.entries
-            .flatMap(\.tags)
-            .filter { seen.insert($0).inserted }
+        cachedTags
     }
     internal var active: Bool { snapshot.isRecordingEnabled }
     internal var logs: [LogEntry] {
-        snapshot.entries.filter(by: filter)
+        cachedLogs
     }
     internal var fileTags: [String] {
-        orderedUnique(
-            snapshot.entries.map(\.source.fileID)
-        )
+        cachedFileTags
     }
     internal var functionTags: [String] {
-        orderedUnique(
-            snapshot.entries.map {
-                $0.source.fileID + "\n> " + $0.source.function
-            }
-        )
+        cachedFunctionTags
     }
     internal func fileLogs(for name: String) -> [LogEntry] {
-        snapshot.entries
-            .filter { $0.source.fileID == name }
-            .filter(by: filter)
+        logs(at: cachedFileLogIndices[name] ?? [])
     }
     internal func functionLogs(for functionTag: String) -> [LogEntry] {
-        snapshot.entries
-            .filter {
-                $0.source.fileID + "\n> " + $0.source.function
-                    == functionTag
-            }
-            .filter(by: filter)
+        logs(at: cachedFunctionLogIndices[functionTag] ?? [])
     }
     internal func toggleActive() {
         store.setRecordingEnabled(!snapshot.isRecordingEnabled)
@@ -88,13 +83,58 @@ internal final class LogViewState {
         for await snapshot in store.updates() {
             guard !Task.isCancelled else { return }
             self.snapshot = snapshot
+            rebuildSnapshotCaches()
         }
     }
 
-    private func orderedUnique<Value: Hashable>(
-        _ values: [Value]
-    ) -> [Value] {
-        var seen: Set<Value> = []
-        return values.filter { seen.insert($0).inserted }
+    private func rebuildSnapshotCaches() {
+        var seenTags: Set<Tag> = []
+        var seenFiles: Set<String> = []
+        var seenFunctions: Set<String> = []
+        var tags: [Tag] = []
+        var files: [String] = []
+        var functions: [String] = []
+
+        for entry in snapshot.entries {
+            for tag in entry.tags where seenTags.insert(tag).inserted {
+                tags.append(tag)
+            }
+            if seenFiles.insert(entry.source.fileID).inserted {
+                files.append(entry.source.fileID)
+            }
+            let functionKey = functionKey(for: entry)
+            if seenFunctions.insert(functionKey).inserted {
+                functions.append(functionKey)
+            }
+        }
+
+        cachedTags = tags
+        cachedFileTags = files
+        cachedFunctionTags = functions
+        rebuildFilteredCaches()
+    }
+
+    private func rebuildFilteredCaches() {
+        let logs = snapshot.entries.filter(by: filter)
+        var fileLogIndices: [String: [Int]] = [:]
+        var functionLogIndices: [String: [Int]] = [:]
+
+        for (index, entry) in logs.enumerated() {
+            fileLogIndices[entry.source.fileID, default: []].append(index)
+            functionLogIndices[functionKey(for: entry), default: []]
+                .append(index)
+        }
+
+        cachedLogs = logs
+        cachedFileLogIndices = fileLogIndices
+        cachedFunctionLogIndices = functionLogIndices
+    }
+
+    private func functionKey(for entry: LogEntry) -> String {
+        entry.source.fileID + "\n> " + entry.source.function
+    }
+
+    private func logs(at indices: [Int]) -> [LogEntry] {
+        indices.map { cachedLogs[$0] }
     }
 }

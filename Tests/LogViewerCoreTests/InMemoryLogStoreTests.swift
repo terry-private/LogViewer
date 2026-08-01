@@ -3,6 +3,54 @@ import Testing
 
 @Suite("スレッド安全なログ保存機能")
 struct InMemoryLogStoreTests {
+    @Test("標準の最大保持件数は1万件")
+    func defaultMaximumEntryCountIsTenThousand() {
+        let store = InMemoryLogStore()
+
+        #expect(InMemoryLogStore.defaultMaximumEntryCount == 10_000)
+        #expect(store.maximumEntryCount == 10_000)
+    }
+
+    @Test("上限を超えると先に追加したログから削除する")
+    func retentionRemovesOldestInsertedEntries() {
+        let store = InMemoryLogStore(maximumEntryCount: 3)
+
+        for index in 1...5 {
+            store.add(makeEntry(message: String(index)))
+        }
+
+        #expect(
+            store.snapshot().entries.map(\.message) == ["3", "4", "5"]
+        )
+    }
+
+    @Test("最大保持件数を0にするとログを保持しない")
+    func zeroMaximumEntryCountKeepsNoEntries() {
+        let store = InMemoryLogStore(maximumEntryCount: 0)
+
+        store.add(makeEntry(message: "ignored"))
+
+        #expect(store.snapshot().entries.isEmpty)
+    }
+
+    @Test(
+        "2万件追加後に最新1万件を保持する",
+        .timeLimit(.minutes(1))
+    )
+    func twentyThousandEntriesMeetBaseline() {
+        let store = InMemoryLogStore(maximumEntryCount: 10_000)
+
+        for index in 0..<20_000 {
+            store.add(makeEntry(message: String(index)))
+        }
+
+        let entries = store.snapshot().entries
+        #expect(
+            entries.map(\.message)
+                == (10_000..<20_000).map(String.init)
+        )
+    }
+
     @Test(
         "変更ストリームがすべての状態変更を複数購読者へ通知する",
         .timeLimit(.minutes(1))

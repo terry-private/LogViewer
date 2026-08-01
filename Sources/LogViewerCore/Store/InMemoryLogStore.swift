@@ -1,10 +1,11 @@
+import DequeModule
 import Foundation
 import Synchronization
 
 /// プロセス内でログを保持する、スレッド安全な保存機能。
 public final class InMemoryLogStore: LogStore, Sendable {
     private struct State {
-        var entries: [LogEntry] = []
+        var entries: Deque<LogEntry> = []
         var isRecordingEnabled: Bool
         var continuations: [
             UUID: AsyncStream<LogStoreSnapshot>.Continuation
@@ -12,16 +13,30 @@ public final class InMemoryLogStore: LogStore, Sendable {
 
         var snapshot: LogStoreSnapshot {
             LogStoreSnapshot(
-                entries: entries,
+                entries: Array(entries),
                 isRecordingEnabled: isRecordingEnabled
             )
         }
     }
 
+    /// 標準で保持する最大ログ件数。
+    public static let defaultMaximumEntryCount = 10_000
+
+    /// この保存機能が保持する最大ログ件数。
+    public let maximumEntryCount: Int
+
     private let state: Mutex<State>
 
-    /// 空の保存機能を作成する。
-    public init(isRecordingEnabled: Bool = true) {
+    /// 最大件数と初期記録状態を指定して、空の保存機能を作成する。
+    public init(
+        maximumEntryCount: Int = defaultMaximumEntryCount,
+        isRecordingEnabled: Bool = true
+    ) {
+        precondition(
+            maximumEntryCount >= 0,
+            "maximumEntryCount must not be negative"
+        )
+        self.maximumEntryCount = maximumEntryCount
         state = Mutex(
             State(isRecordingEnabled: isRecordingEnabled)
         )
@@ -71,7 +86,11 @@ public final class InMemoryLogStore: LogStore, Sendable {
     public func add(_ entry: LogEntry) {
         mutate { state in
             guard state.isRecordingEnabled else { return false }
+            guard maximumEntryCount > 0 else { return false }
             state.entries.append(entry)
+            while state.entries.count > maximumEntryCount {
+                state.entries.removeFirst()
+            }
             return true
         }
     }
@@ -99,6 +118,7 @@ public final class InMemoryLogStore: LogStore, Sendable {
     ) {
         state.withLock { state in
             guard mutation(&state) else { return }
+            guard !state.continuations.isEmpty else { return }
             let snapshot = state.snapshot
             var terminatedIDs: [UUID] = []
             for (id, continuation) in state.continuations {

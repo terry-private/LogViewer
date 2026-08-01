@@ -192,6 +192,19 @@ ContentView()
 
 引数を省略したログ画面は`Logger.shared.store`を使用する。
 
+### ログの保持件数
+
+標準の`InMemoryLogStore`は、先に追加されたログから削除しながら
+最新1万件を保持する。アプリの用途に合わせて初期化時に変更できる。
+
+```swift
+let store = InMemoryLogStore(maximumEntryCount: 2_000)
+let logger = Logger(store: store)
+```
+
+`maximumEntryCount`へ`0`を指定するとログを保持しない。
+負の値は設定できない。
+
 ### ログの整理
 
 ログ画面には3つの表示方法がある。
@@ -247,6 +260,9 @@ Logger.shared
 let store = InMemoryLogStore()
 let logger = Logger(store: store)
 
+// 保持上限を変更
+let smallerStore = InMemoryLogStore(maximumEntryCount: 2_000)
+
 // 任意のタグを付けてログを追加
 func add(
     _ message: String,
@@ -261,6 +277,7 @@ func add(
 `Logger`は保存機能を持たない軽量な窓口で、実際の状態は`LogStore`が管理する。
 標準の`InMemoryLogStore`は並行する追加、一時停止、削除を同期し、
 `AsyncStream<LogStoreSnapshot>`で画面へ変更を通知する。
+標準の最大保持件数は1万件で、上限超過時は追加順の古いログから削除する。
 移行と非推奨化の方針は[移行ガイド](docs/MIGRATION.md)を参照。
 
 ### View拡張
