@@ -45,6 +45,22 @@ ContentView()
     .logViewer(on: .shake, store: store)
 ```
 
+## 保存件数の上限
+
+`InMemoryLogStore`と`Logger.shared.store`は、標準で最新1万件を保持する。
+上限を超えると、記録日時ではなく保存機能へ追加された順序に基づき、
+先に追加されたログから削除する。
+
+以前と同じく実行中の全ログを保持する必要がある場合も、無制限にはせず、
+アプリの想定量に合わせて明示的な上限を指定する。
+
+```swift
+let store = InMemoryLogStore(maximumEntryCount: 50_000)
+let logger = Logger(store: store)
+```
+
+`maximumEntryCount`は0以上を指定する。`0`の場合はログを保持しない。
+
 ## 既存APIとの互換性
 
 次の既存コードは引き続き利用できる。

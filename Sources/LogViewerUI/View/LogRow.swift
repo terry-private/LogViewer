@@ -70,11 +70,20 @@ extension LogRow {
 }
 
 private extension LogEntry {
+    @MainActor
     var timeText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SS"
-        return formatter.string(from: timestamp)
+        LogTimestampFormatter.shared.string(from: timestamp)
     }
+}
+
+@MainActor
+enum LogTimestampFormatter {
+    static let shared: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SS"
+        return formatter
+    }()
 }
 
 #Preview {
