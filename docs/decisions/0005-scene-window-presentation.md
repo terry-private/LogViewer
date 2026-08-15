@@ -41,7 +41,7 @@ View階層内の`overlay`は、アプリが表示しているシート、全画�
 
 - 既存コードは標準の`.overlay`表示を継続する
 - 最前面表示が必要な利用側だけ`.window`を選択する
-- シェイク通知を場面単位へ限定する作業はGitHub課題第11号で扱う
+- シェイク検知の設計は[ADR 0006](0006-scene-shake-detection.md)を参照する
 - Swift Packageの単体テストには接続済み`UIWindowScene`がないため、Sceneを
   使うシート前面表示と実キーボード入力のE2E検証はサンプルアプリを扱う
   GitHub課題第15号で追加する
