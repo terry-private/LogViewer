@@ -3,9 +3,13 @@ import Observation
 import SwiftUI
 
 internal struct LogView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State var viewState: LogViewState = .init()
     @FocusState var focus: Bool
+    @AccessibilityFocusState private var closeButtonFocused: Bool
     @State var autoScroll: Bool = true
+    @State private var deletionConfirmation =
+        LogDeletionConfirmationState()
     let dismiss: () -> Void
 
     init(
@@ -25,6 +29,18 @@ internal struct LogView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerContent
+
+            if !viewState.active {
+                Label(
+                    LogViewerLocalization.string(.recordingPaused),
+                    systemImage: "pause.circle.fill"
+                )
+                .font(.callout.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(.orange.opacity(0.18))
+                .accessibilityAddTraits(.isStaticText)
+            }
 
             ScrollViewReader { proxy in
                 listContent
@@ -93,53 +109,172 @@ internal struct LogView: View {
         .task(id: viewState.periodScheduleRevision) {
             await viewState.waitForNextRelativePeriodTransition()
         }
+        .task {
+            await Task.yield()
+            if LogViewerAccessibilityPolicy.initialFocusTarget == .close {
+                closeButtonFocused = true
+            }
+        }
+        .confirmationDialog(
+            LogViewerLocalization.string(.logsDeleteTitle),
+            isPresented: deleteConfirmationBinding,
+            titleVisibility: .visible
+        ) {
+            Button(
+                LogViewerLocalization.string(.logsDeleteAction),
+                role: .destructive
+            ) {
+                if deletionConfirmation.confirm() {
+                    viewState.deleteLogs()
+                }
+            }
+            Button(
+                LogViewerLocalization.string(.commonCancel),
+                role: .cancel
+            ) {
+                deletionConfirmation.cancel()
+            }
+        } message: {
+            Text(LogViewerLocalization.string(.logsDeleteMessage))
+        }
     }
 }
 
 extension LogView {
     @ViewBuilder
     var headerContent: some View {
-        HStack {
-            CloseButton {
-                focus = false
-                withAnimation {
-                    dismiss()
+        if LogViewerAccessibilityPolicy.adaptiveLayout(
+            for: dynamicTypeSize
+        ).usesStackedHeader {
+            VStack(spacing: 8) {
+                HStack {
+                    closeControl
+                    Spacer()
+                    actionMenu
                 }
+                groupingMenu
             }
-
-            Picker("periods", selection: $viewState.selectedPeriod) {
-                ForEach(Period.allCases) {
-                    Text($0.rawValue).tag($0)
-                }
+            .padding(.horizontal, 15)
+        } else {
+            HStack {
+                closeControl
+                groupingPicker
+                actionMenu
             }
-            .pickerStyle(.segmented)
+            .padding(.horizontal, 15)
+        }
+    }
 
-            Menu {
-                Toggle(isOn: $viewState.isBackgroundTransparent) {
-                    Text("背景を半透明にする")
-                }
-                .fixedSize()
-                Button {
-                    viewState.toggleActive()
-                } label: {
-                    Label(viewState.active ? "ログを一時停止" : "ログの再開", systemImage: viewState.active ? "pause.circle" : "play.circle")
-                }
-                Button(role: .destructive) {
-                    viewState.deleteLogs()
-                } label: {
-                    Label("ログを削除", systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "line.3.horizontal")
-                    .font(.title2)
+    private var closeControl: some View {
+        CloseButton {
+            focus = false
+            withAnimation {
+                dismiss()
             }
         }
-        .padding(.horizontal, 15)
+        .accessibilityFocused($closeButtonFocused)
+    }
+
+    private var groupingPicker: some View {
+        Picker(
+            LogViewerLocalization.string(.groupingLabel),
+            selection: $viewState.selectedPeriod
+        ) {
+            ForEach(Period.allCases) { period in
+                Text(period.title).tag(period)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+
+    private var groupingMenu: some View {
+        Picker(
+            LogViewerLocalization.string(.groupingLabel),
+            selection: $viewState.selectedPeriod
+        ) {
+            ForEach(Period.allCases) { period in
+                Text(period.title).tag(period)
+            }
+        }
+        .pickerStyle(.menu)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var actionMenu: some View {
+        Menu {
+            Toggle(isOn: $viewState.isBackgroundTransparent) {
+                Text(LogViewerLocalization.string(
+                    .settingsTransparentBackground
+                ))
+            }
+            Button {
+                viewState.toggleActive()
+            } label: {
+                Label(
+                    LogViewerLocalization.string(
+                        LogViewerAccessibilityPolicy.recordingActionKey(
+                            isRecordingEnabled: viewState.active
+                        )
+                    ),
+                    systemImage: viewState.active
+                        ? "pause.circle"
+                        : "play.circle"
+                )
+            }
+            Button(role: .destructive) {
+                deletionConfirmation.request()
+            } label: {
+                Label(
+                    LogViewerLocalization.string(.logsDeleteAction),
+                    systemImage: "trash"
+                )
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal")
+                .font(.title2)
+                .accessibilityLabel(
+                    LogViewerLocalization.string(
+                        .accessibilityMoreActions
+                    )
+                )
+        }
+    }
+
+    private var emptyState: some View {
+        let key = LogViewerAccessibilityPolicy.emptyStateKey(
+            resultCount: viewState.resultCount,
+            totalCount: viewState.totalCount,
+            isFilterActive: viewState.filter.isActive
+        ) ?? .emptyNoLogs
+        return VStack(spacing: 8) {
+            Image(systemName: viewState.filter.isActive
+                ? "line.3.horizontal.decrease.circle"
+                : "doc.text.magnifyingglass")
+                .font(.title2)
+                .accessibilityHidden(true)
+            Text(LogViewerLocalization.string(key))
+                .multilineTextAlignment(.center)
+        }
+        .foregroundStyle(.secondary)
+        .padding()
+        .accessibilityElement(children: .combine)
+    }
+
+    private var deleteConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { deletionConfirmation.isPresented },
+            set: { isPresented in
+                if !isPresented {
+                    deletionConfirmation.cancel()
+                }
+            }
+        )
     }
 
     @ViewBuilder
     var listContent: some View {
-        List {            switch viewState.selectedPeriod {
+        List {
+            switch viewState.selectedPeriod {
             case .all:
                 ForEach(viewState.logs) { log in
                     LogRow(debugLog: log)
@@ -178,6 +313,15 @@ extension LogView {
         .listRowSpacing(-10)
         .listSectionSpacing(-10)
         .scrollContentBackground(.hidden)
+        .overlay {
+            if LogViewerAccessibilityPolicy.emptyStateKey(
+                resultCount: viewState.resultCount,
+                totalCount: viewState.totalCount,
+                isFilterActive: viewState.filter.isActive
+            ) != nil {
+                emptyState
+            }
+        }
     }
 
     typealias Expands = ReferenceWritableKeyPath<LogViewState, String?>

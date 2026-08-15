@@ -3,6 +3,7 @@ import LogViewerCore
 import SwiftUI
 
 struct LogFilterView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var filter: LogFilter
     @State private var searchText: String
     let allTags: [Tag]
@@ -25,9 +26,9 @@ struct LogFilterView: View {
     var body: some View {
         Group {
             if #available(iOS 26, *) {
-                content.glassEffect()
+                adaptiveContent.glassEffect()
             } else {
-                content
+                adaptiveContent
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
         }
@@ -48,6 +49,20 @@ struct LogFilterView: View {
         }
     }
 
+    @ViewBuilder
+    private var adaptiveContent: some View {
+        if LogViewerAccessibilityPolicy.adaptiveLayout(
+            for: dynamicTypeSize
+        ).usesScrollableFilter {
+            ScrollView(.vertical) {
+                content
+            }
+            .frame(maxHeight: 260)
+        } else {
+            content
+        }
+    }
+
     private var content: some View {
         VStack(alignment: .leading, spacing: 10) {
             searchField
@@ -64,7 +79,11 @@ struct LogFilterView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("メッセージ、ファイル、関数を検索", text: $searchText)
+                .accessibilityHidden(true)
+            TextField(
+                LogViewerLocalization.string(.filterSearchPlaceholder),
+                text: $searchText
+            )
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
             if !searchText.isEmpty {
@@ -75,6 +94,11 @@ struct LogFilterView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(
+                    LogViewerLocalization.string(
+                        .accessibilityClearSearch
+                    )
+                )
             }
         }
         .padding(.horizontal, 10)
@@ -100,16 +124,33 @@ struct LogFilterView: View {
     private var tagFilters: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label("タグ", systemImage: "tag")
+                Label(
+                    LogViewerLocalization.string(.filterTags),
+                    systemImage: "tag"
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
                 Menu {
-                    Button("いずれかを含む（OR）") {
+                    Button {
                         filter.tagMatchMode = .any
+                    } label: {
+                        Label(
+                            LogViewerLocalization.string(.filterTagsAny),
+                            systemImage: filter.tagMatchMode == .any
+                                ? "checkmark"
+                                : "circle"
+                        )
                     }
-                    Button("すべてを含む（AND）") {
+                    Button {
                         filter.tagMatchMode = .all
+                    } label: {
+                        Label(
+                            LogViewerLocalization.string(.filterTagsAll),
+                            systemImage: filter.tagMatchMode == .all
+                                ? "checkmark"
+                                : "circle"
+                        )
                     }
                 } label: {
                     Text(filter.tagMatchMode.title)
@@ -132,31 +173,63 @@ struct LogFilterView: View {
     }
 
     private var footer: some View {
-        HStack {
-            Menu {
-                ForEach(LogFilterPeriod.allCases, id: \.self) { period in
-                    Button(period.title) {
-                        filter.period = period
-                    }
-                }
-            } label: {
-                Label(filter.period.title, systemImage: "calendar")
-                    .font(.caption)
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                periodMenu
+                Spacer()
+                resultCountText
+                clearFilterButton
             }
-            Spacer()
-            Text(LogFilterSummary.resultCountText(
-                resultCount: resultCount,
-                totalCount: totalCount
-            ))
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-            if filter.isActive {
-                Button("解除") {
-                    filter = .all
-                    searchText = ""
+            VStack(alignment: .leading, spacing: 8) {
+                periodMenu
+                HStack {
+                    resultCountText
+                    Spacer()
+                    clearFilterButton
                 }
+            }
+        }
+    }
+
+    private var periodMenu: some View {
+        Menu {
+            ForEach(LogFilterPeriod.allCases, id: \.self) { period in
+                Button {
+                    filter.period = period
+                } label: {
+                    Label(
+                        period.title,
+                        systemImage: filter.period == period
+                            ? "checkmark"
+                            : "circle"
+                    )
+                }
+            }
+        } label: {
+            Label(filter.period.title, systemImage: "calendar")
                 .font(.caption)
+        }
+    }
+
+    private var resultCountText: some View {
+        Text(LogViewerLocalization.resultCount(
+            resultCount,
+            totalCount: totalCount
+        ))
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+    }
+
+    @ViewBuilder
+    private var clearFilterButton: some View {
+        if filter.isActive {
+            Button(
+                LogViewerLocalization.string(.filterClear)
+            ) {
+                filter = .all
+                searchText = ""
             }
+            .font(.caption)
         }
     }
 
@@ -165,18 +238,32 @@ struct LogFilterView: View {
         isSelected: Bool,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(
-                    isSelected ? Color.accentColor : Color.secondary.opacity(0.15),
-                    in: Capsule()
-                )
+        let selection = LogViewerAccessibilityPolicy.selectionPresentation(
+            isSelected: isSelected
+        )
+        return Button(action: action) {
+            HStack(spacing: 4) {
+                if selection.showsCheckmark {
+                    Image(systemName: "checkmark")
+                }
+                Text(title)
+            }
+            .font(.caption)
+            .foregroundStyle(isSelected ? .white : .primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                isSelected
+                    ? Color.accentColor
+                    : Color.secondary.opacity(0.15),
+                in: Capsule()
+            )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(
+            selection.isAccessibilitySelected ? .isSelected : []
+        )
     }
 
     private func toggle<Value: Hashable>(
@@ -194,13 +281,13 @@ struct LogFilterView: View {
 private extension LogLevel {
     var filterTitle: String {
         switch self {
-        case .trace: "Trace"
-        case .debug: "Debug"
-        case .info: "Info"
-        case .notice: "Notice"
-        case .warning: "Warning"
-        case .error: "Error"
-        case .critical: "Critical"
+        case .trace: LogViewerLocalization.string(.levelTrace)
+        case .debug: LogViewerLocalization.string(.levelDebug)
+        case .info: LogViewerLocalization.string(.levelInfo)
+        case .notice: LogViewerLocalization.string(.levelNotice)
+        case .warning: LogViewerLocalization.string(.levelWarning)
+        case .error: LogViewerLocalization.string(.levelError)
+        case .critical: LogViewerLocalization.string(.levelCritical)
         }
     }
 }
@@ -208,8 +295,8 @@ private extension LogLevel {
 private extension TagMatchMode {
     var title: String {
         switch self {
-        case .any: "OR"
-        case .all: "AND"
+        case .any: LogViewerLocalization.string(.filterMatchAny)
+        case .all: LogViewerLocalization.string(.filterMatchAll)
         }
     }
 }
@@ -217,17 +304,14 @@ private extension TagMatchMode {
 private extension LogFilterPeriod {
     var title: String {
         switch self {
-        case .all: "すべての期間"
-        case .lastFiveMinutes: "直近5分"
-        case .lastHour: "直近1時間"
-        case .lastDay: "直近24時間"
+        case .all: LogViewerLocalization.string(.filterPeriodAll)
+        case .lastFiveMinutes:
+            LogViewerLocalization.string(.filterPeriodLast5Minutes)
+        case .lastHour:
+            LogViewerLocalization.string(.filterPeriodLastHour)
+        case .lastDay:
+            LogViewerLocalization.string(.filterPeriodLast24Hours)
         }
-    }
-}
-
-enum LogFilterSummary {
-    static func resultCountText(resultCount: Int, totalCount: Int) -> String {
-        "\(resultCount) / \(totalCount)件"
     }
 }
 

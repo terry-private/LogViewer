@@ -2,6 +2,7 @@ import LogViewerCore
 import SwiftUI
 
 internal struct LogRow: View {
+    @Environment(\.locale) private var locale
     let log: LogEntry
     let isShowFilePath: Bool
     let isShowFunction: Bool
@@ -12,7 +13,10 @@ internal struct LogRow: View {
     }
     var body: some View {
         VStack(alignment: .leading) {
-            Text("\(log.timeText)")
+            Text(LogTimestampFormatter.string(
+                from: log.timestamp,
+                locale: locale
+            ))
                 .foregroundStyle(.secondary)
             Grid(alignment: .leading) {
                 if isShowFilePath {
@@ -44,6 +48,7 @@ internal struct LogRow: View {
         .multilineTextAlignment(.leading)
         .textSelection(.enabled)
         .listRowBackground(Color.clear)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -52,6 +57,7 @@ extension LogRow {
     func indentedText(_ text: String, systemImage: String) -> some View {
         GridRow(alignment: .firstTextBaseline) {
             Image(systemName: systemImage)
+                .accessibilityHidden(true)
             Text(text)
         }
         .foregroundStyle(.secondary)
@@ -69,21 +75,24 @@ extension LogRow {
     }
 }
 
-private extension LogEntry {
-    @MainActor
-    var timeText: String {
-        LogTimestampFormatter.shared.string(from: timestamp)
-    }
-}
-
 @MainActor
 enum LogTimestampFormatter {
-    static let shared: DateFormatter = {
+    private static var formatters: [String: DateFormatter] = [:]
+
+    static func string(from date: Date, locale: Locale) -> String {
+        formatter(for: locale).string(from: date)
+    }
+
+    static func formatter(for locale: Locale) -> DateFormatter {
+        if let formatter = formatters[locale.identifier] {
+            return formatter
+        }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SS"
+        formatter.locale = locale
+        formatter.setLocalizedDateFormatFromTemplate("yMdjmsSS")
+        formatters[locale.identifier] = formatter
         return formatter
-    }()
+    }
 }
 
 #Preview {

@@ -14,6 +14,11 @@ struct BottomScrollButton: View {
                     .padding(.vertical, 8)
             }
             .buttonStyle(.glass)
+            .accessibilityLabel(
+                LogViewerLocalization.string(
+                    .accessibilityScrollToBottom
+                )
+            )
         } else {
             Button {
                 action()
@@ -25,6 +30,11 @@ struct BottomScrollButton: View {
                     }
                     .foregroundStyle(Color(uiColor: .label))
             }
+            .accessibilityLabel(
+                LogViewerLocalization.string(
+                    .accessibilityScrollToBottom
+                )
+            )
         }
     }
 }

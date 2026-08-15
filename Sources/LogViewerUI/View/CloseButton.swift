@@ -13,6 +13,9 @@ struct CloseButton: View {
                 Image(systemName: "xmark")
             }
             .buttonStyle(.glass)
+            .accessibilityLabel(
+                LogViewerLocalization.string(.accessibilityClose)
+            )
         } else {
             Button {
                 action()
@@ -24,6 +27,9 @@ struct CloseButton: View {
                     }
                     .foregroundStyle(Color(uiColor: .label))
             }
+            .accessibilityLabel(
+                LogViewerLocalization.string(.accessibilityClose)
+            )
         }
     }
 }
