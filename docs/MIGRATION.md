@@ -144,3 +144,19 @@ Logger.shared.add("処理を開始しました", tags: "debug")
 
 関連する作業状態と完了条件は
 [GitHub課題第7号](https://github.com/terry-private/LogViewer/issues/7)で管理する。
+
+## 既存ログ基盤との接続
+
+SwiftLogを使用しているアプリは、既存の呼び出しをLogViewer固有APIへ置き換えず、
+追加製品`LogViewerSwiftLog`の`LogViewerLogHandler`から同じ`LogStore`へ接続できる。
+中核製品のターゲットにはSwiftLogのimport・link依存は追加されない。ただし、
+SwiftPMのパッケージ解決ではswift-logも対象になる。
+
+`LoggingSystem.bootstrap`はプロセス内で1回だけのため、すでにBackendを設定している
+アプリではbootstrapを追加しない。既存の設定箇所で`MultiplexLogHandler`を使い、
+既存HandlerとLogViewer用Handlerを同時に構成する。
+
+既存の`os.Logger`呼び出しは自動では取り込まれない。`OSLogStore`による履歴取得は
+欠落しないリアルタイム配送ではなく、プライバシーで伏せられた値や完全な発生元を
+復元できないためである。OSLogとLogViewerの両方が必要な場合は、共通の呼び出し
+窓口またはSwiftLog Multiplexへ移行する。

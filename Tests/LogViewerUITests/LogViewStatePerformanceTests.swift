@@ -394,9 +394,8 @@ struct LogViewStatePerformanceTests {
     private func waitUntil(
         _ condition: () -> Bool
     ) async {
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(5))
-        while !condition(), clock.now < deadline {
+        for _ in 0..<500 {
+            guard !condition() else { return }
             try? await Task.sleep(for: .milliseconds(10))
         }
     }

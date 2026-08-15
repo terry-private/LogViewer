@@ -60,6 +60,21 @@ xcodebuild \
 
 xcodebuild \
   -quiet \
-  -scheme LogViewer \
+  -scheme LogViewerSwiftLog \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewerSwiftLog \
+  -configuration Release \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewer-Package \
   -destination "$test_destination" \
   test
