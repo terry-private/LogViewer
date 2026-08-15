@@ -8,9 +8,10 @@ import LogViewerCore
 struct LogViewStatePerformanceTests {
     @Test("結果件数の表示を全件数と組み合わせる")
     func formatsResultCountSummary() {
-        #expect(LogFilterSummary.resultCountText(
-            resultCount: 12,
-            totalCount: 42
+        #expect(LogViewerLocalization.resultCount(
+            12,
+            totalCount: 42,
+            locale: Locale(identifier: "ja")
         ) == "12 / 42件")
     }
 

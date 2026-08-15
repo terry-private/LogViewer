@@ -1,0 +1,286 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "accessibility.clear_search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear search" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "検索語を消去" } }
+      }
+    },
+    "accessibility.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close log viewer" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログ画面を閉じる" } }
+      }
+    },
+    "accessibility.collapsed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Collapsed" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "折りたたみ" } }
+      }
+    },
+    "accessibility.expanded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Expanded" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "展開中" } }
+      }
+    },
+    "accessibility.more_actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log actions" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログ操作" } }
+      }
+    },
+    "accessibility.scroll_to_bottom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scroll to latest log" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最新のログへ移動" } }
+      }
+    },
+    "common.cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
+      }
+    },
+    "empty.no_logs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No logs yet" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログはまだありません" } }
+      }
+    },
+    "empty.no_matches" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No logs match the current filters" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "条件に一致するログはありません" } }
+      }
+    },
+    "filter.clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear filters" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "絞り込みを解除" } }
+      }
+    },
+    "filter.match.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AND" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AND" } }
+      }
+    },
+    "filter.match.any" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OR" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OR" } }
+      }
+    },
+    "filter.period.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All time" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべての期間" } }
+      }
+    },
+    "filter.period.last_24_hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last 24 hours" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "直近24時間" } }
+      }
+    },
+    "filter.period.last_5_minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last 5 minutes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "直近5分" } }
+      }
+    },
+    "filter.period.last_hour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last hour" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "直近1時間" } }
+      }
+    },
+    "filter.result_count.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld / %2$lld log" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld / %2$lld件" } }
+      }
+    },
+    "filter.result_count.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld / %2$lld logs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld / %2$lld件" } }
+      }
+    },
+    "filter.search.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search messages, files, and functions" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メッセージ、ファイル、関数を検索" } }
+      }
+    },
+    "filter.tags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tags" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タグ" } }
+      }
+    },
+    "filter.tags.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Match all tags (AND)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてを含む（AND）" } }
+      }
+    },
+    "filter.tags.any" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Match any tag (OR)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "いずれかを含む（OR）" } }
+      }
+    },
+    "grouping.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて" } }
+      }
+    },
+    "grouping.file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "File" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ファイル" } }
+      }
+    },
+    "grouping.function" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Function" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "関数" } }
+      }
+    },
+    "grouping.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Group logs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログの表示方法" } }
+      }
+    },
+    "level.critical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Critical" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "重大" } }
+      }
+    },
+    "level.debug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Debug" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デバッグ" } }
+      }
+    },
+    "level.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Error" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "エラー" } }
+      }
+    },
+    "level.info" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Info" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "情報" } }
+      }
+    },
+    "level.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notice" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "通知" } }
+      }
+    },
+    "level.trace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Trace" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "トレース" } }
+      }
+    },
+    "level.warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Warning" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "警告" } }
+      }
+    },
+    "logs.delete.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete all logs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのログを削除" } }
+      }
+    },
+    "logs.delete.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This action cannot be undone." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この操作は取り消せません。" } }
+      }
+    },
+    "logs.delete.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete all logs?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのログを削除しますか？" } }
+      }
+    },
+    "recording.pause" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pause recording" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "記録を一時停止" } }
+      }
+    },
+    "recording.paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log recording is paused" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログ記録は一時停止中です" } }
+      }
+    },
+    "recording.resume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resume recording" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "記録を再開" } }
+      }
+    },
+    "settings.transparent_background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Translucent background" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "背景を半透明にする" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

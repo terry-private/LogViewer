@@ -181,12 +181,15 @@ package struct LogFilterResult: Sendable {
 private extension LogEntry {
     func matchesSearchText(_ searchText: String, locale: Locale) -> Bool {
         guard !searchText.isEmpty else { return true }
+        let foldedSearchText = searchText.folding(
+            options: [.diacriticInsensitive],
+            locale: locale
+        ).lowercased(with: locale)
         func contains(_ value: String) -> Bool {
-            value.range(
-                of: searchText,
-                options: [.caseInsensitive, .diacriticInsensitive],
+            value.folding(
+                options: [.diacriticInsensitive],
                 locale: locale
-            ) != nil
+            ).lowercased(with: locale).contains(foldedSearchText)
         }
         return contains(message)
             || contains(source.fileID)

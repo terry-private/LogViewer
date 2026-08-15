@@ -24,9 +24,18 @@ struct SectionHeader: View {
             Spacer()
             Image(systemName: "chevron.right")
                 .rotationEffect(.degrees(isOpen ? 90 : 0))
+                .accessibilityHidden(true)
         }
         .foregroundStyle(Color(uiColor: .label))
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(
+            LogViewerLocalization.string(
+                isOpen
+                    ? .accessibilityExpanded
+                    : .accessibilityCollapsed
+            )
+        )
     }
 }

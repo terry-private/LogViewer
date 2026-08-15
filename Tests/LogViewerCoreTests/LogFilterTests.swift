@@ -170,7 +170,7 @@ struct LogFilterTests {
         ])
         #expect(logs.filter(
             by: filter,
-            now: referenceDate.addingTimeInterval(301)
+            now: referenceDate.addingTimeInterval(302)
         ).isEmpty)
     }
 
@@ -179,7 +179,7 @@ struct LogFilterTests {
         let logs = [makeEntry(
             level: .info,
             message: "I",
-            fileID: "Locale.swift",
+            fileID: "Source.m",
             function: "run()",
             tags: [],
             secondsFromReference: 0

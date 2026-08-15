@@ -34,6 +34,9 @@ let package = Package(
             name: "LogViewerUI",
             dependencies: [
                 "LogViewerCore",
+            ],
+            resources: [
+                .process("Resources"),
             ]
         ),
         .target(
