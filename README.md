@@ -18,6 +18,7 @@ SwiftUIアプリ向けの、見やすく直感的なデバッグログ表示ツ�
 - 🔎 検索 — メッセージ、ファイル、関数を全文検索
 - 🌐 日本語・英語 — アプリの言語設定に合わせて表示
 - ♿️ アクセシビリティ — VoiceOverとDynamic Typeに対応
+- 🔌 SwiftLog接続 — 既存の`swift-log`呼び出しをそのまま表示
 
 ## 必要環境
 
@@ -42,15 +43,18 @@ LogViewerは、主にデバッグおよび内部向けビルドでの使用を�
 
 ## モジュール構成
 
-パッケージ内部は次の3ターゲットに分かれている。
+パッケージ内部は次の4ターゲットに分かれている。
 
 - `LogViewerCore` — ログ型、保存、絞り込み
 - `LogViewerUI` — SwiftUI／UIKitによる表示。`LogViewerCore`だけに依存
 - `LogViewer` — 既存の`import LogViewer`を維持する互換入口
+- `LogViewerSwiftLog` — SwiftLog向け接続部品。`LogViewerCore`と`Logging`に依存
 
 通常の利用側はこれまでどおり`LogViewer`製品を追加し、`import LogViewer`を
 使用する。画面を必要としないiOS／iPadOS向けの処理では、
 `LogViewerCore`製品だけを選択できる。
+既存の`swift-log`呼び出しを接続する場合だけ、追加で`LogViewerSwiftLog`製品を
+選択する。
 
 中核ターゲットにはSwiftUI／UIKitを含めず、画面機能から中核機能への
 一方向依存を維持する。
@@ -216,6 +220,66 @@ ContentView()
 ```
 
 引数を省略したログ画面は`Logger.shared.store`を使用する。
+
+### SwiftLogとの接続
+
+導入アプリが[SwiftLog](https://github.com/apple/swift-log)を使用している場合は、
+`LogViewerSwiftLog`製品を追加して`LogViewerLogHandler`を設定する。`LogViewerCore`と
+`LogViewer`のターゲット自体はSwiftLogをimport・linkしない。なおSwiftPMでは任意製品を
+選んだ場合も、パッケージ宣言に含まれるswift-logが依存解決の対象になる。
+
+```swift
+import Logging
+import LogViewer
+import LogViewerSwiftLog
+
+let store = InMemoryLogStore(privacyPolicy: .standard)
+
+LoggingSystem.bootstrap { label in
+    LogViewerLogHandler(label: label, store: store)
+}
+
+let logger = Logging.Logger(label: "com.example.network")
+logger.info("通信を開始しました", metadata: ["request-id": "42"])
+
+ContentView()
+    .logViewer(on: .shake, store: store)
+```
+
+`LoggingSystem.bootstrap`はプロセス内で1回だけ呼び出せる。すでに別のBackendを
+設定している場合は、その最初の設定箇所でSwiftLogの`MultiplexLogHandler`へ
+既存Handlerと`LogViewerLogHandler`を一緒に渡す。接続部品自身はSwiftLogへ再送せず、
+受け取った出来事を1回だけ`LogStore`へ追加する。
+
+変換規則は次のとおり。
+
+| SwiftLog | LogViewer |
+| --- | --- |
+| `trace`から`critical`までの水準 | 同名の`LogLevel` |
+| `message` | `LogEntry.message` |
+| `label` | `LogEntry.category` |
+| `file`、`function`、`line` | `SourceLocation` |
+| `source` | 予約付加情報`swift-log.source` |
+| Logger／Provider／呼び出し時のmetadata | 後の値を優先した文字列metadata |
+| `error` | `error.message`と`error.type` |
+
+配列・辞書のmetadataは安定した文字列表現へ変換する。SwiftLogのmetadata属性と
+値の型、元の発生日時、LogViewerのタグは`LogEntry`へ引き継げない。記録日時は
+Handlerが受け取った時刻になる。秘密値を保存前に除去する場合は、上の例のように
+`InMemoryLogStore(privacyPolicy:)`へ方針を指定する。
+
+### OSLogとの接続範囲
+
+既存の`os.Logger`呼び出しをBackendとして横取りする公開APIはない。
+`OSLogStore`は統合ログの履歴を取得できるが、LogViewer向けの欠落しないリアルタイム
+配送ではなく、ポーリングでは重複・取りこぼしの境界管理が必要になる。また、OSLogの
+プライバシー設定で伏せられた値、元のSwift型、すべての発生元情報は復元できない。
+このため、バージョン1ではOSLog履歴の自動取り込みを提供しない。
+
+OSLogとLogViewerの両方へ同じ出来事を送りたい場合は、アプリの共通ログ窓口で
+明示的に二つへ渡すか、SwiftLogを入口にしてOSLog Backendと
+`LogViewerLogHandler`をMultiplexする。OSLog履歴を後から再投入して、すでに直接
+保存したログと混在させる運用は二重記録になるため行わない。
 
 ### ログの保持件数
 

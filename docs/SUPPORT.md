@@ -80,7 +80,8 @@ LOGVIEWER_TEST_DESTINATION='platform=iOS Simulator,name=<名前>,OS=<バージ�
 swift package dump-package
 ```
 
-最低対応のiOSバージョンを対象にパッケージをビルドする。
+最低対応のiOSバージョンを対象に、互換製品と任意の接続製品をDebug／Releaseで
+ビルドする。例として互換製品のDebugビルドは次のとおり。
 
 ```bash
 xcodebuild \
@@ -94,10 +95,13 @@ xcodebuild \
 
 ```bash
 xcodebuild \
-  -scheme LogViewer \
+  -scheme LogViewer-Package \
   -destination 'platform=iOS Simulator,name=<シミュレーター名>' \
   test
 ```
+
+`LogViewer-Package`スキームには、Core、UI、互換入口、SwiftLog接続部品の
+すべてのテストを含める。
 
 最低iOSバージョンは汎用ビルドで検証する。最低バージョンのiOS実行環境で
 テストするには、その実行環境をインストールし、

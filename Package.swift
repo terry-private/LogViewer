@@ -15,12 +15,20 @@ let package = Package(
             name: "LogViewerCore",
             targets: ["LogViewerCore"]
         ),
+        .library(
+            name: "LogViewerSwiftLog",
+            targets: ["LogViewerSwiftLog"]
+        ),
     ],
     dependencies: [
-      .package(
-        url: "https://github.com/apple/swift-collections.git",
-        .upToNextMinor(from: "1.2.0")
-      ),
+        .package(
+            url: "https://github.com/apple/swift-collections.git",
+            .upToNextMinor(from: "1.2.0")
+        ),
+        .package(
+            url: "https://github.com/apple/swift-log.git",
+            .upToNextMajor(from: "1.14.0")
+        ),
     ],
     targets: [
         .target(
@@ -37,6 +45,13 @@ let package = Package(
             ],
             resources: [
                 .process("Resources"),
+            ]
+        ),
+        .target(
+            name: "LogViewerSwiftLog",
+            dependencies: [
+                "LogViewerCore",
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .target(
@@ -57,6 +72,14 @@ let package = Package(
             dependencies: [
                 "LogViewerCore",
                 "LogViewerUI",
+            ]
+        ),
+        .testTarget(
+            name: "LogViewerSwiftLogTests",
+            dependencies: [
+                "LogViewerCore",
+                "LogViewerSwiftLog",
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .testTarget(
