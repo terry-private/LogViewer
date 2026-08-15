@@ -87,10 +87,15 @@ struct ShakeLogViewModifier: ViewModifier {
                     isTransparent: isTransparent
                 )
             )
-            .onReceive(NotificationCenter.default.publisher(for: .deviceDidShakeNotification)) { _ in
-                withAnimation {
-                    visible.toggle()
+            .background {
+                LogViewerSceneShakeDetector { _ in
+                    withAnimation {
+                        visible = ShakePresentationReducer.visibility(
+                            afterShakeWhileVisible: visible
+                        )
+                    }
                 }
+                .frame(width: 0, height: 0)
             }
     }
 
@@ -176,16 +181,5 @@ private struct LogViewerPresentationModifier: ViewModifier {
         if !didPresent {
             visibility.wrappedValue = false
         }
-    }
-}
-
-extension NSNotification.Name {
-    public static let deviceDidShakeNotification = NSNotification.Name("DeviceDidShakeNotification")
-}
-
-extension UIWindow {
-    open override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
-        super.motionEnded(motion, with: event)
-        NotificationCenter.default.post(name: .deviceDidShakeNotification, object: event)
     }
 }

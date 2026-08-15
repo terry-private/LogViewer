@@ -76,8 +76,23 @@ ContentView()
 ```
 
 専用ウインドウは呼び出し元Viewが属する`UIWindowScene`ごとに管理される。
-閉じると表示前のキーウインドウへ戻る。現在のシェイク通知はアプリ全体へ
-配信されるため、複数場面での`.shake`の分離はGitHub課題第11号で扱う。
+閉じると表示前のキーウインドウへ戻る。
+
+## シェイク検知
+
+シェイク検知は`UIWindow.motionEnded`の全体的な上書きから、
+`.logViewer(on: .shake)`を設定したViewの場面内Responderへ移行した。
+利用側の`UIWindow`実装や別の場面の表示状態を変更しない。
+
+`deviceDidShakeNotification`を直接購読している場合、`object`は従来どおり
+`UIEvent?`として利用できる。検知した場面は
+`LogViewerShakeNotification.windowSceneUserInfoKey`を使って`userInfo`から
+取得できる。通知の発火範囲はすべての`UIWindow`から、
+`.logViewer(on: .shake)`を設定したViewの所属場面へ狭まる。通知だけを購読して
+いた利用側も、検知する場面のViewへ`.logViewer(on: .shake)`を設定する必要がある。
+
+シミュレーターやシェイク非対応環境では、引き続き`.custom`へBindingを渡して
+ボタン、メニュー、デバッグ操作などから表示できる。
 
 ## 既存APIとの互換性
 
