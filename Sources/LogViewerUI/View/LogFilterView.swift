@@ -1,136 +1,233 @@
+import Foundation
 import LogViewerCore
 import SwiftUI
 
 struct LogFilterView: View {
     @Binding var filter: LogFilter
-    @State var searchText: String = ""
-    @State var selectedTags: Set<Tag> = []
+    @State private var searchText: String
     let allTags: [Tag]
+    let resultCount: Int
+    let totalCount: Int
+
+    init(
+        filter: Binding<LogFilter>,
+        allTags: [Tag],
+        resultCount: Int,
+        totalCount: Int
+    ) {
+        _filter = filter
+        _searchText = State(initialValue: filter.wrappedValue.searchText)
+        self.allTags = allTags
+        self.resultCount = resultCount
+        self.totalCount = totalCount
+    }
+
     var body: some View {
-        if #available(iOS 26, *) {
-            content
-                .glassEffect()
-        } else {
-            content
+        Group {
+            if #available(iOS 26, *) {
+                content.glassEffect()
+            } else {
+                content
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
+        }
+        .task(id: searchText) {
+            do {
+                try await Task.sleep(for: .milliseconds(250))
+                if filter.searchText != searchText {
+                    filter.searchText = searchText
+                }
+            } catch {
+                // 次の入力でTaskが取り消された場合は古い検索語を反映しない。
+            }
+        }
+        .onChange(of: filter.searchText) { _, newValue in
+            if searchText != newValue {
+                searchText = newValue
+            }
         }
     }
 
-    @ViewBuilder
-    var content: some View {
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            searchField
+            levelFilters
+            if !allTags.isEmpty {
+                tagFilters
+            }
+            footer
+        }
+        .padding(12)
+    }
+
+    private var searchField: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("メッセージ、ファイル、関数を検索", text: $searchText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var levelFilters: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(LogLevel.allCases, id: \.self) { level in
+                    filterButton(
+                        title: level.filterTitle,
+                        isSelected: filter.levels.contains(level)
+                    ) {
+                        toggle(level, in: &filter.levels)
+                    }
+                }
+            }
+        }
+    }
+
+    private var tagFilters: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label("タグ", systemImage: "tag")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Menu {
+                    Button("いずれかを含む（OR）") {
+                        filter.tagMatchMode = .any
+                    }
+                    Button("すべてを含む（AND）") {
+                        filter.tagMatchMode = .all
+                    }
+                } label: {
+                    Text(filter.tagMatchMode.title)
+                        .font(.caption)
+                }
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(allTags, id: \.self) { tag in
+                        filterButton(
+                            title: tag.rawValue,
+                            isSelected: filter.tags.contains(tag)
+                        ) {
+                            toggle(tag, in: &filter.tags)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var footer: some View {
         HStack {
             Menu {
-                ForEach(LogFilterItem.allCases, id: \.self) { item in
-                    Button {
-                        update(item: item)
-                    } label: {
-                        item.label
+                ForEach(LogFilterPeriod.allCases, id: \.self) { period in
+                    Button(period.title) {
+                        filter.period = period
                     }
                 }
             } label: {
-                Image(systemName: filter.item.systemImageName)
-                    .foregroundStyle(.white)
-                    .padding(8)
-                    .background {
-                        Circle()
-                    }
+                Label(filter.period.title, systemImage: "calendar")
+                    .font(.caption)
             }
-            .padding(3)
-            Text("")
-                .padding(10)
-                .frame(maxWidth: .infinity)
-                .overlay {
-                    switch filter {
-                    case .all:
-                        Text("All logs")
-                        Spacer()
-                    case .search:
-                        TextField("Search", text: $searchText)
-                            .onChange(of: searchText) {_, _ in
-                                if case .search = filter {
-                                    update(item: .search)
-                                }
-                            }
-                    case .tag:
-                        ScrollView(.horizontal) {
-                            LazyHStack {
-                                ForEach(allTags, id: \.self) { tag in
-                                    tagButton(tag)
-                                }
-                            }
-                        }
-                        .padding(.vertical, -5)
-                    }
+            Spacer()
+            Text(LogFilterSummary.resultCountText(
+                resultCount: resultCount,
+                totalCount: totalCount
+            ))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            if filter.isActive {
+                Button("解除") {
+                    filter = .all
+                    searchText = ""
                 }
+                .font(.caption)
+            }
         }
     }
 
-    @ViewBuilder
-    func tagButton(_ tag: Tag) -> some View {
-        Button {
-            if selectedTags.contains(tag) {
-                selectedTags.remove(tag)
-            } else {
-                selectedTags.insert(tag)
-            }
-            if case .tag = filter {
-                update(item: .tag)
-            }
-        } label: {
-            Text(tag.rawValue)
-                .foregroundStyle(.white)
-                .padding(.vertical, 8)
+    private func filterButton(
+        title: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(isSelected ? .white : .primary)
                 .padding(.horizontal, 10)
-                .background {
-                    Capsule()
-                        .foregroundStyle(selectedTags.contains(tag) ? Color.accentColor : Color.secondary)
-                }
-
+                .padding(.vertical, 7)
+                .background(
+                    isSelected ? Color.accentColor : Color.secondary.opacity(0.15),
+                    in: Capsule()
+                )
         }
+        .buttonStyle(.plain)
     }
 
-    func update(item: LogFilterItem) {
-        switch item {
-        case .all:
-            filter = .all
-        case .search:
-            filter = .search(searchText)
-        case .tag:
-            filter = .tag(selectedTags)
+    private func toggle<Value: Hashable>(
+        _ value: Value,
+        in selection: inout Set<Value>
+    ) {
+        if selection.contains(value) {
+            selection.remove(value)
+        } else {
+            selection.insert(value)
         }
     }
 }
 
-enum LogFilterItem: CaseIterable, Hashable, Sendable {
-    case all, tag, search
-
-    var systemImageName: String {
+private extension LogLevel {
+    var filterTitle: String {
         switch self {
-        case .all: "checklist.checked"
-        case .search: "magnifyingglass"
-        case .tag: "tag"
+        case .trace: "Trace"
+        case .debug: "Debug"
+        case .info: "Info"
+        case .notice: "Notice"
+        case .warning: "Warning"
+        case .error: "Error"
+        case .critical: "Critical"
         }
     }
+}
 
+private extension TagMatchMode {
     var title: String {
         switch self {
-        case .all: "All"
-        case .search: "Search"
-        case .tag: "Tag"
+        case .any: "OR"
+        case .all: "AND"
         }
-    }
-
-    var label: some View {
-        Label(title, systemImage: systemImageName)
     }
 }
 
-extension LogFilter {
-    var item: LogFilterItem {
+private extension LogFilterPeriod {
+    var title: String {
         switch self {
-        case .all: .all
-        case .search: .search
-        case .tag: .tag
+        case .all: "すべての期間"
+        case .lastFiveMinutes: "直近5分"
+        case .lastHour: "直近1時間"
+        case .lastDay: "直近24時間"
         }
+    }
+}
+
+enum LogFilterSummary {
+    static func resultCountText(resultCount: Int, totalCount: Int) -> String {
+        "\(resultCount) / \(totalCount)件"
     }
 }
 
@@ -138,12 +235,12 @@ extension LogFilter {
     @Previewable @State var filter: LogFilter = .all
     VStack {
         Spacer()
-
-        if #available(iOS 26, *) {
-            LogFilterView(filter: $filter, allTags: ["api", "error"])
-                .glassEffect()
-        } else {
-            LogFilterView(filter: $filter, allTags: ["api", "error"])
-        }
+        LogFilterView(
+            filter: $filter,
+            allTags: ["api", "error", "network"],
+            resultCount: 12,
+            totalCount: 42
+        )
     }
+    .padding()
 }

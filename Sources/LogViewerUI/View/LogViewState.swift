@@ -1,3 +1,4 @@
+import Foundation
 import LogViewerCore
 import Observation
 
@@ -12,14 +13,15 @@ internal final class LogViewState {
     private var cachedFunctionTags: [String] = []
     private var cachedFileLogIndices: [String: [Int]] = [:]
     private var cachedFunctionLogIndices: [String: [Int]] = [:]
+    private var cachedRelativePeriodTransitionDate: Date?
+    private(set) var periodScheduleRevision: UInt = 0
     var selectedPeriod = Period.all
     var filter: LogFilter = .all {
         didSet {
             rebuildFilteredCaches()
+            periodScheduleRevision &+= 1
         }
     }
-    internal var searchKey: String = ""
-    let selectedTag: Set<Tag> = []
     var fileExpands: String?
     var functionExpands: String?
     var isBackgroundTransparent: Bool
@@ -60,6 +62,12 @@ internal final class LogViewState {
     internal var logs: [LogEntry] {
         cachedLogs
     }
+    internal var resultCount: Int {
+        cachedLogs.count
+    }
+    internal var totalCount: Int {
+        snapshot.entries.count
+    }
     internal var fileTags: [String] {
         cachedFileTags
     }
@@ -84,21 +92,64 @@ internal final class LogViewState {
             guard !Task.isCancelled else { return }
             self.snapshot = snapshot
             rebuildSnapshotCaches()
+            periodScheduleRevision &+= 1
         }
+    }
+
+    internal func refreshRelativePeriod(at now: Date = .now) {
+        guard filter.period != .all else { return }
+        rebuildFilteredCaches(now: now)
+        periodScheduleRevision &+= 1
+    }
+
+    internal func waitForNextRelativePeriodTransition() async {
+        guard let transitionDate = cachedRelativePeriodTransitionDate else {
+            return
+        }
+        let delay = max(
+            transitionDate.timeIntervalSinceNow + 0.001,
+            0.001
+        )
+        do {
+            try await Task.sleep(for: .seconds(delay))
+        } catch {
+            return
+        }
+        refreshRelativePeriod()
+    }
+
+    internal func nextRelativePeriodTransitionDate(
+        at now: Date = .now
+    ) -> Date? {
+        snapshot.entries.filterResult(by: filter, now: now)
+            .nextTransitionDate
     }
 
     private func rebuildSnapshotCaches() {
         var seenTags: Set<Tag> = []
-        var seenFiles: Set<String> = []
-        var seenFunctions: Set<String> = []
         var tags: [Tag] = []
-        var files: [String] = []
-        var functions: [String] = []
 
         for entry in snapshot.entries {
             for tag in entry.tags where seenTags.insert(tag).inserted {
                 tags.append(tag)
             }
+        }
+
+        cachedTags = tags
+        rebuildFilteredCaches()
+    }
+
+    private func rebuildFilteredCaches(now: Date = .now) {
+        let result = snapshot.entries.filterResult(by: filter, now: now)
+        let logs = result.entries
+        var files: [String] = []
+        var functions: [String] = []
+        var seenFiles: Set<String> = []
+        var seenFunctions: Set<String> = []
+        var fileLogIndices: [String: [Int]] = [:]
+        var functionLogIndices: [String: [Int]] = [:]
+
+        for (index, entry) in logs.enumerated() {
             if seenFiles.insert(entry.source.fileID).inserted {
                 files.append(entry.source.fileID)
             }
@@ -106,26 +157,15 @@ internal final class LogViewState {
             if seenFunctions.insert(functionKey).inserted {
                 functions.append(functionKey)
             }
-        }
-
-        cachedTags = tags
-        cachedFileTags = files
-        cachedFunctionTags = functions
-        rebuildFilteredCaches()
-    }
-
-    private func rebuildFilteredCaches() {
-        let logs = snapshot.entries.filter(by: filter)
-        var fileLogIndices: [String: [Int]] = [:]
-        var functionLogIndices: [String: [Int]] = [:]
-
-        for (index, entry) in logs.enumerated() {
             fileLogIndices[entry.source.fileID, default: []].append(index)
-            functionLogIndices[functionKey(for: entry), default: []]
+            functionLogIndices[functionKey, default: []]
                 .append(index)
         }
 
         cachedLogs = logs
+        cachedRelativePeriodTransitionDate = result.nextTransitionDate
+        cachedFileTags = files
+        cachedFunctionTags = functions
         cachedFileLogIndices = fileLogIndices
         cachedFunctionLogIndices = functionLogIndices
     }
