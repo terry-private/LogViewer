@@ -24,6 +24,7 @@ struct LogViewerPresentationTests {
         let logView = modifier?.makeLogView {}
 
         #expect(modifier?.isTransparent == isTransparent)
+        #expect(modifier?.presentation == .overlay)
         #expect(
             logView?.viewState.isBackgroundTransparent
                 == isTransparent
@@ -48,10 +49,35 @@ struct LogViewerPresentationTests {
         let logView = modifier?.makeLogView {}
 
         #expect(modifier?.isTransparent == isTransparent)
+        #expect(modifier?.presentation == .overlay)
         #expect(
             logView?.viewState.isBackgroundTransparent
                 == isTransparent
         )
+    }
+
+    @Test("専用ウインドウ表示方法を各トリガーへ渡す")
+    func windowPresentationIsForwardedToEachTrigger() throws {
+        let customView = Color.clear.logViewer(
+            on: .custom(.constant(false)),
+            presentation: .window
+        )
+        let shakeView = Color.clear.logViewer(
+            on: .shake,
+            presentation: .window
+        )
+
+        let customModifier = try #require(findValue(
+            of: CustomLogViewModifier.self,
+            in: customView
+        ))
+        let shakeModifier = try #require(findValue(
+            of: ShakeLogViewModifier.self,
+            in: shakeView
+        ))
+
+        #expect(customModifier.presentation == .window)
+        #expect(shakeModifier.presentation == .window)
     }
 
     @Test(

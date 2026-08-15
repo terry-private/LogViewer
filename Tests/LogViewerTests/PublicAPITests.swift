@@ -44,6 +44,7 @@ struct PublicAPITests {
     func documentedViewModifiersCompile() {
         _ = CustomTriggerConsumerView()
         _ = ShakeTriggerConsumerView()
+        _ = WindowPresentationConsumerView()
     }
 }
 
@@ -71,5 +72,17 @@ private struct ShakeTriggerConsumerView: View {
     var body: some View {
         Color.clear
             .logViewer(on: .shake)
+    }
+}
+
+private struct WindowPresentationConsumerView: View {
+    @State private var isPresented = false
+
+    var body: some View {
+        Color.clear
+            .logViewer(
+                on: .custom($isPresented),
+                presentation: .window
+            )
     }
 }
