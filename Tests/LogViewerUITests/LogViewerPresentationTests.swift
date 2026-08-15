@@ -164,9 +164,9 @@ struct LogViewerPresentationTests {
         _ condition: () -> Bool
     ) async {
         let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(1))
+        let deadline = clock.now.advanced(by: .seconds(5))
         while !condition(), clock.now < deadline {
-            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
         }
     }
 

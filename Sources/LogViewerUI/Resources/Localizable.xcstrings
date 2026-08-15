@@ -50,6 +50,13 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
       }
     },
+    "common.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
     "empty.no_logs" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -251,6 +258,41 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete all logs?" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべてのログを削除しますか？" } }
+      }
+    },
+    "logs.copy_filtered" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy filtered logs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "絞り込み結果をコピー" } }
+      }
+    },
+    "logs.export_error.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please try the export again." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "もう一度書き出しを試してください。" } }
+      }
+    },
+    "logs.export_error.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unable to export logs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログを書き出せませんでした" } }
+      }
+    },
+    "logs.share_json" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Share as JSON" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "JSONで共有" } }
+      }
+    },
+    "logs.share_text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Share as text" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "テキストで共有" } }
       }
     },
     "recording.pause" : {

@@ -105,6 +105,21 @@ ContentView()
 
 ## 既存APIとの互換性
 
+秘匿化を指定しない既存の`InMemoryLogStore`と`.logViewer`は、引き続き
+`LogPrivacyPolicy.none`として動作する。保存済みの値を後から復元不能な形で
+秘匿化したい場合は、Store作成時に方針を明示する。
+
+```swift
+let policy = LogPrivacyPolicy.standard
+let store = InMemoryLogStore(privacyPolicy: policy)
+let logger = Logger(store: store)
+```
+
+任意の`LogStore`に未加工のログを保持したまま表示・共有だけを秘匿化する場合は、
+`.logViewer(privacyPolicy:)`へ方針を渡す。秘密値を保持しない要件がある場合は、
+表示時ではなく保存前の秘匿化を使用する。同じ方針をStore、Viewer、Exporterへ
+重ねて指定せず、未加工値が入る最初の必要な境界で適用する。
+
 次の既存コードは引き続き利用できる。
 
 ```swift

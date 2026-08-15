@@ -50,6 +50,24 @@ struct CorePublicAPITests {
             line: 1
         )
     }
+
+    @Test("公開の秘匿化と書き出しAPIを中核製品だけで利用できる")
+    func privacyAndExportAPIsCompile() throws {
+        let customRule = try LogRedactionRule(matching: "secret-42")
+        let policy = LogPrivacyPolicy(
+            rules: [.emailAddress, customRule],
+            redactedMetadataKeys: ["token"],
+            removedMetadataKeys: ["internal_id"]
+        )
+        let store = InMemoryLogStore(privacyPolicy: policy)
+        let exporter = LogExporter(privacyPolicy: policy)
+
+        store.add(LogEntry(message: "secret-42", source: .init()))
+        _ = try exporter.data(
+            from: store.snapshot().entries,
+            format: .json
+        )
+    }
 }
 
 private struct EmptyLogStore: LogStore {

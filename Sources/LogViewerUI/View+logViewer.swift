@@ -21,6 +21,7 @@ public extension View {
         on trigger: ShowTrigger,
         presentation: LogViewerPresentationStyle = .overlay,
         store: any LogStore = Logger.shared.store,
+        privacyPolicy: LogPrivacyPolicy = .none,
         isTransparent: Bool = false
     ) -> some View {
         switch trigger {
@@ -29,6 +30,7 @@ public extension View {
                 ShakeLogViewModifier(
                     presentation: presentation,
                     store: store,
+                    privacyPolicy: privacyPolicy,
                     isTransparent: isTransparent
                 )
             )
@@ -38,6 +40,7 @@ public extension View {
                     visible: visible,
                     presentation: presentation,
                     store: store,
+                    privacyPolicy: privacyPolicy,
                     isTransparent: isTransparent
                 )
             )
@@ -49,6 +52,7 @@ struct CustomLogViewModifier: ViewModifier {
     @Binding var visible: Bool
     let presentation: LogViewerPresentationStyle
     let store: any LogStore
+    let privacyPolicy: LogPrivacyPolicy
     let isTransparent: Bool
 
     func body(content: Content) -> some View {
@@ -57,6 +61,7 @@ struct CustomLogViewModifier: ViewModifier {
                 visible: $visible,
                 presentation: presentation,
                 store: store,
+                privacyPolicy: privacyPolicy,
                 isTransparent: isTransparent
             )
         )
@@ -65,6 +70,7 @@ struct CustomLogViewModifier: ViewModifier {
     func makeLogView(dismiss: @escaping () -> Void) -> LogView {
         LogView(
             store: store,
+            privacyPolicy: privacyPolicy,
             isTransparent: isTransparent,
             dismiss: dismiss
         )
@@ -75,6 +81,7 @@ struct ShakeLogViewModifier: ViewModifier {
     @State var visible: Bool = false
     let presentation: LogViewerPresentationStyle
     let store: any LogStore
+    let privacyPolicy: LogPrivacyPolicy
     let isTransparent: Bool
 
     func body(content: Content) -> some View {
@@ -84,6 +91,7 @@ struct ShakeLogViewModifier: ViewModifier {
                     visible: $visible,
                     presentation: presentation,
                     store: store,
+                    privacyPolicy: privacyPolicy,
                     isTransparent: isTransparent
                 )
             )
@@ -102,6 +110,7 @@ struct ShakeLogViewModifier: ViewModifier {
     func makeLogView(dismiss: @escaping () -> Void) -> LogView {
         LogView(
             store: store,
+            privacyPolicy: privacyPolicy,
             isTransparent: isTransparent,
             dismiss: dismiss
         )
@@ -112,6 +121,7 @@ private struct LogViewerPresentationModifier: ViewModifier {
     @Binding var visible: Bool
     let presentation: LogViewerPresentationStyle
     let store: any LogStore
+    let privacyPolicy: LogPrivacyPolicy
     let isTransparent: Bool
     @State private var windowScene: UIWindowScene?
     @State private var windowPresenter = LogViewerWindowPresenter()
@@ -150,6 +160,7 @@ private struct LogViewerPresentationModifier: ViewModifier {
     ) -> LogView {
         LogView(
             store: store,
+            privacyPolicy: privacyPolicy,
             isTransparent: isTransparent,
             dismiss: dismiss
         )
@@ -174,6 +185,7 @@ private struct LogViewerPresentationModifier: ViewModifier {
         let didPresent = windowPresenter.present(
             in: windowScene,
             store: store,
+            privacyPolicy: privacyPolicy,
             isTransparent: isTransparent
         ) {
             visibility.wrappedValue = false

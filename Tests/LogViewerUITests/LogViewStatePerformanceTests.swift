@@ -15,6 +15,61 @@ struct LogViewStatePerformanceTests {
         ) == "12 / 42件")
     }
 
+    @Test("表示と書き出しへ同じ秘匿化方針を適用する")
+    func redactsDisplayAndExport() throws {
+        let store = InMemoryLogStore()
+        store.add(LogEntry(
+            message: "owner@example.com Bearer abc.def",
+            source: SourceLocation(
+                fileID: "Account.swift",
+                function: "load()",
+                line: 1
+            ),
+            metadata: ["token": "raw-token"]
+        ))
+        let state = LogViewState(
+            store: store,
+            privacyPolicy: .standard
+        )
+
+        #expect(store.snapshot().entries[0].message.contains("owner@"))
+        #expect(state.logs[0].message == "<private> <private>")
+        #expect(state.logs[0].metadata == ["token": "<private>"])
+        for format in [LogExportFormat.plainText, .json] {
+            let exported = try state.exportString(format: format)
+            #expect(!exported.contains("owner@example.com"))
+            #expect(!exported.contains("abc.def"))
+            #expect(!exported.contains("raw-token"))
+        }
+    }
+
+    @Test("現在の絞り込み結果だけを書き出す")
+    func exportsCurrentFilterOnly() throws {
+        let store = InMemoryLogStore()
+        store.add(makeEntry(
+            message: "included",
+            fileID: "Included.swift",
+            function: "run()",
+            tags: ["share"]
+        ))
+        store.add(makeEntry(
+            message: "excluded",
+            fileID: "Excluded.swift",
+            function: "run()",
+            tags: ["private"]
+        ))
+        let state = LogViewState(store: store)
+        state.filter = .tag(["share"])
+
+        let text = try state.exportString(format: .plainText)
+        let json = try state.exportString(format: .json)
+
+        #expect(text.contains("included"))
+        #expect(!text.contains("excluded"))
+        #expect(json.contains("included"))
+        #expect(!json.contains("excluded"))
+    }
+
     @Test("複合条件の結果件数とグループを同時に更新する")
     func compositeFilterUpdatesCountsAndGroups() {
         let now = Date.now
@@ -275,6 +330,46 @@ struct LogViewStatePerformanceTests {
         #expect(state.fileTags == ["Feature.swift"])
     }
 
+    @Test(
+        "1万件を保存前秘匿化して表示と両書き出しへ5秒以内に反映する",
+        .timeLimit(.minutes(1))
+    )
+    func tenThousandPrivateEntriesMeetBaseline() throws {
+        let store = InMemoryLogStore(
+            maximumEntryCount: 10_000,
+            privacyPolicy: .standard
+        )
+        let clock = ContinuousClock()
+        let start = clock.now
+
+        for index in 0..<10_000 {
+            store.add(LogEntry(
+                message: "user\(index)@example.com Bearer token\(index)",
+                source: SourceLocation(
+                    fileID: "Privacy.swift",
+                    function: "record()",
+                    line: UInt(index)
+                ),
+                metadata: ["token": "raw-\(index)"]
+            ))
+        }
+        let state = LogViewState(store: store)
+        let json = try state.exportString(format: .json)
+        let text = try state.exportString(format: .plainText)
+        let elapsed = start.duration(to: clock.now)
+
+        #expect(elapsed < .seconds(5))
+        #expect(state.logs.count == 10_000)
+        #expect(state.logs.allSatisfy { entry in
+            entry.message == "<private> <private>"
+                && entry.metadata == ["token": "<private>"]
+        })
+        #expect(!json.contains("@example.com"))
+        #expect(!json.contains("raw-"))
+        #expect(!text.contains("@example.com"))
+        #expect(!text.contains("raw-"))
+    }
+
     private func makeEntry(
         message: String,
         fileID: String,
@@ -300,9 +395,9 @@ struct LogViewStatePerformanceTests {
         _ condition: () -> Bool
     ) async {
         let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: .seconds(1))
+        let deadline = clock.now.advanced(by: .seconds(5))
         while !condition(), clock.now < deadline {
-            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
         }
     }
 }
