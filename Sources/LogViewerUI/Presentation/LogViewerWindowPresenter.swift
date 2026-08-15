@@ -219,6 +219,7 @@ final class LogViewerWindowPresenter {
     func present(
         in scene: UIWindowScene,
         store: any LogStore,
+        privacyPolicy: LogPrivacyPolicy = .none,
         isTransparent: Bool,
         onDismiss: @escaping @MainActor () -> Void
     ) -> Bool {
@@ -228,6 +229,7 @@ final class LogViewerWindowPresenter {
                 UIKitLogViewerWindowAdapter.installContent(
                     on: window,
                     store: store,
+                    privacyPolicy: privacyPolicy,
                     isTransparent: isTransparent,
                     dismiss: dismiss
                 )
@@ -247,12 +249,14 @@ enum UIKitLogViewerWindowAdapter {
     static func installContent(
         on window: UIWindow,
         store: any LogStore,
+        privacyPolicy: LogPrivacyPolicy = .none,
         isTransparent: Bool,
         dismiss: @escaping @MainActor () -> Void
     ) -> UIHostingController<LogView> {
         let hostingController = UIHostingController(
             rootView: LogView(
                 store: store,
+                privacyPolicy: privacyPolicy,
                 isTransparent: isTransparent,
                 dismiss: dismiss
             )

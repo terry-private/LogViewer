@@ -6,7 +6,9 @@ import Observation
 @Observable
 internal final class LogViewState {
     private let store: any LogStore
+    private let privacyPolicy: LogPrivacyPolicy
     private var snapshot: LogStoreSnapshot
+    private var protectedEntries: [LogEntry] = []
     private var cachedTags: [Tag] = []
     private var cachedLogs: [LogEntry] = []
     private var cachedFileTags: [String] = []
@@ -28,9 +30,11 @@ internal final class LogViewState {
 
     init(
         store: any LogStore = Logger.shared.store,
+        privacyPolicy: LogPrivacyPolicy = .none,
         isBackgroundTransparent: Bool = false
     ) {
         self.store = store
+        self.privacyPolicy = privacyPolicy
         snapshot = store.snapshot()
         self.isBackgroundTransparent = isBackgroundTransparent
         rebuildSnapshotCaches()
@@ -87,6 +91,14 @@ internal final class LogViewState {
         store.deleteAll()
     }
 
+    internal func exportData(format: LogExportFormat) throws -> Data {
+        try LogExporter().data(from: cachedLogs, format: format)
+    }
+
+    internal func exportString(format: LogExportFormat) throws -> String {
+        try LogExporter().string(from: cachedLogs, format: format)
+    }
+
     internal func observeStore() async {
         for await snapshot in store.updates() {
             guard !Task.isCancelled else { return }
@@ -121,7 +133,7 @@ internal final class LogViewState {
     internal func nextRelativePeriodTransitionDate(
         at now: Date = .now
     ) -> Date? {
-        snapshot.entries.filterResult(by: filter, now: now)
+        protectedEntries.filterResult(by: filter, now: now)
             .nextTransitionDate
     }
 
@@ -129,7 +141,9 @@ internal final class LogViewState {
         var seenTags: Set<Tag> = []
         var tags: [Tag] = []
 
-        for entry in snapshot.entries {
+        protectedEntries = privacyPolicy.redacting(snapshot.entries)
+
+        for entry in protectedEntries {
             for tag in entry.tags where seenTags.insert(tag).inserted {
                 tags.append(tag)
             }
@@ -140,7 +154,7 @@ internal final class LogViewState {
     }
 
     private func rebuildFilteredCaches(now: Date = .now) {
-        let result = snapshot.entries.filterResult(by: filter, now: now)
+        let result = protectedEntries.filterResult(by: filter, now: now)
         let logs = result.entries
         var files: [String] = []
         var functions: [String] = []

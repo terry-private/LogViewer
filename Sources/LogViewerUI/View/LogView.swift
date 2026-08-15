@@ -1,6 +1,7 @@
 import LogViewerCore
 import Observation
 import SwiftUI
+import UIKit
 
 internal struct LogView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -10,16 +11,21 @@ internal struct LogView: View {
     @State var autoScroll: Bool = true
     @State private var deletionConfirmation =
         LogDeletionConfirmationState()
+    @State private var shareItem: LogShareItem?
+    @State private var temporaryExportURL: URL?
+    @State private var isExportErrorPresented = false
     let dismiss: () -> Void
 
     init(
         store: any LogStore = Logger.shared.store,
+        privacyPolicy: LogPrivacyPolicy = .none,
         isTransparent: Bool = false,
         dismiss: @escaping () -> Void
     ) {
         _viewState = State(
             initialValue: LogViewState(
                 store: store,
+                privacyPolicy: privacyPolicy,
                 isBackgroundTransparent: isTransparent
             )
         )
@@ -137,6 +143,20 @@ internal struct LogView: View {
         } message: {
             Text(LogViewerLocalization.string(.logsDeleteMessage))
         }
+        .sheet(item: $shareItem, onDismiss: removeTemporaryExport) { item in
+            LogShareSheet(activityItems: [item.activityItem])
+        }
+        .alert(
+            LogViewerLocalization.string(.logsExportErrorTitle),
+            isPresented: $isExportErrorPresented
+        ) {
+            Button(LogViewerLocalization.string(.commonOK)) {}
+        } message: {
+            Text(LogViewerLocalization.string(.logsExportErrorMessage))
+        }
+        .onDisappear {
+            removeTemporaryExport()
+        }
     }
 }
 
@@ -221,6 +241,32 @@ extension LogView {
                         : "play.circle"
                 )
             }
+            Button {
+                UIPasteboard.general.string = try? viewState.exportString(
+                    format: .plainText
+                )
+            } label: {
+                Label(
+                    LogViewerLocalization.string(.logsCopyFiltered),
+                    systemImage: "doc.on.doc"
+                )
+            }
+            Button {
+                prepareShare(format: .plainText)
+            } label: {
+                Label(
+                    LogViewerLocalization.string(.logsShareText),
+                    systemImage: "square.and.arrow.up"
+                )
+            }
+            Button {
+                prepareShare(format: .json)
+            } label: {
+                Label(
+                    LogViewerLocalization.string(.logsShareJSON),
+                    systemImage: "curlybraces"
+                )
+            }
             Button(role: .destructive) {
                 deletionConfirmation.request()
             } label: {
@@ -269,6 +315,38 @@ extension LogView {
                 }
             }
         )
+    }
+
+    private func prepareShare(format: LogExportFormat) {
+        do {
+            switch format {
+            case .plainText:
+                shareItem = LogShareItem(
+                    activityItem: try viewState.exportString(
+                        format: .plainText
+                    )
+                )
+            case .json:
+                let url = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("LogViewer-\(UUID()).json")
+                try viewState.exportData(format: .json).write(
+                    to: url,
+                    options: .atomic
+                )
+                temporaryExportURL = url
+                shareItem = LogShareItem(
+                    activityItem: url
+                )
+            }
+        } catch {
+            isExportErrorPresented = true
+        }
+    }
+
+    private func removeTemporaryExport() {
+        guard let url = temporaryExportURL else { return }
+        try? FileManager.default.removeItem(at: url)
+        temporaryExportURL = nil
     }
 
     @ViewBuilder
@@ -354,6 +432,33 @@ extension LogView {
             SectionHeader(title: title, isOpen: isOpen)
         }
     }
+}
+
+private struct LogShareItem: Identifiable {
+    let id = UUID()
+    let activityItem: Any
+
+    init(activityItem: Any) {
+        self.activityItem = activityItem
+    }
+}
+
+private struct LogShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(
+        context: Context
+    ) -> UIActivityViewController {
+        UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: nil
+        )
+    }
+
+    func updateUIViewController(
+        _ uiViewController: UIActivityViewController,
+        context: Context
+    ) {}
 }
 
 #if DEBUG

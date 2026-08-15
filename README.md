@@ -230,6 +230,40 @@ let logger = Logger(store: store)
 `maximumEntryCount`へ`0`を指定するとログを保持しない。
 負の値は設定できない。
 
+### プライバシーと書き出し
+
+標準の秘匿化方針は、メールアドレス、`Bearer`認証値、`token`、`password`、
+`authorization`などの付加情報を`<private>`へ置き換える。秘密値をStoreへ
+保持し続けない場合は、保存前に方針を適用する`InMemoryLogStore`を使用する。
+付加情報は値だけでなくキーも対象になり、伏せ字後に同じキーが複数できた場合は
+`#2`以降の連番を付けて項目を保持する。
+
+```swift
+let privacyPolicy = LogPrivacyPolicy.standard
+let store = InMemoryLogStore(privacyPolicy: privacyPolicy)
+let logger = Logger(store: store)
+
+ContentView()
+    .logViewer(
+        on: .shake,
+        store: store
+    )
+```
+
+独自の秘密文字列は`LogRedactionRule(matching:)`で追加できる。任意の正規表現は
+処理時間を予測できないため公開APIでは受け付けない。付加情報キーは、値だけを
+伏せ字にするものと、キーごと削除するものを分けて指定できる。既定値の
+`.none`は互換性のためログを変更しない。Storeで保存前秘匿化したログへ同じ方針を
+重ねて指定せず、未加工値を持つ任意のStoreの表示・共有だけを保護するときに
+`.logViewer(privacyPolicy:)`を使う。本番でログを記録する場合は
+`privacyPolicy`を明示し、画面自体を本番へ含めるかもビルド設定で判断する。
+
+ログ画面の操作メニューから、現在の絞り込み結果だけをコピー、テキスト共有、
+JSON共有できる。共有画面は利用者が操作を選んだときだけ開く。テキストは各値を
+引用して制御文字をescapeし、1件を1行で出力する。JSONは`LogEntry`配列で、日時を
+ミリ秒付きISO 8601文字列として出力する。コードから変換する場合は
+`LogExporter`へ表示・共有と同じ秘匿化方針を渡す。
+
 ### ログの整理
 
 ログ画面には3つの表示方法がある。
@@ -326,6 +360,7 @@ func logViewer(
     on trigger: ShowTrigger,
     presentation: LogViewerPresentationStyle = .overlay,
     store: any LogStore = Logger.shared.store,
+    privacyPolicy: LogPrivacyPolicy = .none,
     isTransparent: Bool = false
 ) -> some View
 ```

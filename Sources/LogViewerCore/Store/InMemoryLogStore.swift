@@ -24,19 +24,23 @@ public final class InMemoryLogStore: LogStore, Sendable {
 
     /// この保存機能が保持する最大ログ件数。
     public let maximumEntryCount: Int
+    /// 保存前に適用する秘匿化方針。
+    public let privacyPolicy: LogPrivacyPolicy
 
     private let state: Mutex<State>
 
     /// 最大件数と初期記録状態を指定して、空の保存機能を作成する。
     public init(
         maximumEntryCount: Int = defaultMaximumEntryCount,
-        isRecordingEnabled: Bool = true
+        isRecordingEnabled: Bool = true,
+        privacyPolicy: LogPrivacyPolicy = .none
     ) {
         precondition(
             maximumEntryCount >= 0,
             "maximumEntryCount must not be negative"
         )
         self.maximumEntryCount = maximumEntryCount
+        self.privacyPolicy = privacyPolicy
         state = Mutex(
             State(isRecordingEnabled: isRecordingEnabled)
         )
@@ -84,6 +88,11 @@ public final class InMemoryLogStore: LogStore, Sendable {
     }
 
     public func add(_ entry: LogEntry) {
+        let acceptsEntry = state.withLock { state in
+            state.isRecordingEnabled && maximumEntryCount > 0
+        }
+        guard acceptsEntry else { return }
+        let entry = privacyPolicy.redacting(entry)
         mutate { state in
             guard state.isRecordingEnabled else { return false }
             guard maximumEntryCount > 0 else { return false }

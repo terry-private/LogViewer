@@ -45,6 +45,18 @@ struct PublicAPITests {
         _ = CustomTriggerConsumerView()
         _ = ShakeTriggerConsumerView()
         _ = WindowPresentationConsumerView()
+        _ = PrivacyPolicyConsumerView()
+    }
+}
+
+private struct PrivacyPolicyConsumerView: View {
+    @State private var isPresented = false
+
+    var body: some View {
+        Color.clear.logViewer(
+            on: .custom($isPresented),
+            privacyPolicy: .standard
+        )
     }
 }
 
