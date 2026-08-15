@@ -119,31 +119,96 @@ extension LogEntry: Comparable {
 }
 
 package extension [LogEntry] {
-    func filter(by tags: Set<Tag>) -> [LogEntry] {
-        if tags.isEmpty {
-            lazy.filter { entry in
-                entry.tags.isEmpty
+    func filter(
+        by logFilter: LogFilter,
+        now: Date = .now,
+        locale: Locale = .current
+    ) -> [LogEntry] {
+        filterResult(by: logFilter, now: now, locale: locale).entries
+    }
+
+    func filterResult(
+        by logFilter: LogFilter,
+        now: Date = .now,
+        locale: Locale = .current
+    ) -> LogFilterResult {
+        guard logFilter.isActive else {
+            return LogFilterResult(entries: self, nextTransitionDate: nil)
+        }
+        let searchText = logFilter.searchText.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        var entries: [LogEntry] = []
+        entries.reserveCapacity(count)
+        var nextTransitionDate: Date?
+
+        for entry in self where entry.matchesLevels(logFilter.levels)
+            && entry.matchesTags(
+                logFilter.tags,
+                mode: logFilter.tagMatchMode
+            )
+            && entry.matchesSearchText(searchText, locale: locale) {
+            if let transition = logFilter.period.transitionDate(
+                for: entry.timestamp,
+                now: now
+            ) {
+                if let currentTransitionDate = nextTransitionDate {
+                    nextTransitionDate = Swift.min(
+                        currentTransitionDate,
+                        transition
+                    )
+                } else {
+                    nextTransitionDate = transition
+                }
             }
-        } else {
-            lazy.filter { entry in
-                !tags.isDisjoint(with: entry.tags)
+            if entry.matchesPeriod(logFilter.period, now: now) {
+                entries.append(entry)
             }
+        }
+
+        return LogFilterResult(
+            entries: entries,
+            nextTransitionDate: nextTransitionDate
+        )
+    }
+}
+
+package struct LogFilterResult: Sendable {
+    package let entries: [LogEntry]
+    package let nextTransitionDate: Date?
+}
+
+private extension LogEntry {
+    func matchesSearchText(_ searchText: String, locale: Locale) -> Bool {
+        guard !searchText.isEmpty else { return true }
+        func contains(_ value: String) -> Bool {
+            value.range(
+                of: searchText,
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: locale
+            ) != nil
+        }
+        return contains(message)
+            || contains(source.fileID)
+            || contains(source.function)
+    }
+
+    func matchesLevels(_ levels: Set<LogLevel>) -> Bool {
+        levels.isEmpty || levels.contains(level)
+    }
+
+    func matchesTags(_ tags: Set<Tag>, mode: TagMatchMode) -> Bool {
+        guard !tags.isEmpty else { return true }
+        switch mode {
+        case .any:
+            return !tags.isDisjoint(with: self.tags)
+        case .all:
+            return tags.isSubset(of: self.tags)
         }
     }
 
-    func filter(by logFilter: LogFilter) -> [LogEntry] {
-        switch logFilter {
-        case .all:
-            self
-        case .search(let key):
-            lazy.filter { entry in
-                key.isEmpty ||
-                entry.message.contains(key) ||
-                entry.source.fileID.contains(key) ||
-                entry.source.function.contains(key)
-            }
-        case .tag(let tags):
-            filter(by: tags)
-        }
+    func matchesPeriod(_ period: LogFilterPeriod, now: Date) -> Bool {
+        guard let duration = period.duration else { return true }
+        return now.addingTimeInterval(-duration)...now ~= timestamp
     }
 }

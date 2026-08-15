@@ -73,7 +73,12 @@ internal struct LogView: View {
                     }
             }
 
-            LogFilterView(filter: $viewState.filter, allTags: viewState.tags)
+            LogFilterView(
+                filter: $viewState.filter,
+                allTags: viewState.tags,
+                resultCount: viewState.resultCount,
+                totalCount: viewState.totalCount
+            )
                 .padding(.horizontal)
 
         }
@@ -84,6 +89,9 @@ internal struct LogView: View {
         )
         .task {
             await viewState.observeStore()
+        }
+        .task(id: viewState.periodScheduleRevision) {
+            await viewState.waitForNextRelativePeriodTransition()
         }
     }
 }
