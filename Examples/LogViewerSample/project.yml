@@ -1,0 +1,55 @@
+name: LogViewerSample
+options:
+  bundleIdPrefix: com.terry.LogViewer
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+packages:
+  LogViewer:
+    path: ../..
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+targets:
+  LogViewerSample:
+    type: application
+    platform: iOS
+    sources:
+      - path: LogViewerSample
+    dependencies:
+      - package: LogViewer
+        product: LogViewer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terry.LogViewer.Sample
+        PRODUCT_NAME: LogViewerSample
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: LogViewer Sample
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        SUPPORTS_MACCATALYST: NO
+  LogViewerSampleUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: LogViewerSampleUITests
+    dependencies:
+      - target: LogViewerSample
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terry.LogViewer.SampleUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: LogViewerSample
+schemes:
+  LogViewerSample:
+    build:
+      targets:
+        LogViewerSample: all
+        LogViewerSampleUITests: [test]
+    test:
+      targets:
+        - LogViewerSampleUITests
+      gatherCoverageData: false

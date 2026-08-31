@@ -2,8 +2,11 @@ import LogViewerCore
 import SwiftUI
 import UIKit
 
+/// LogViewerを表示するきっかけ。
 public enum ShowTrigger {
+    /// 端末のシェイクを、修飾したViewが属する場面内で検知する。
     case shake
+    /// Bindingが`true`になったときに表示し、閉じたとき`false`へ戻す。
     case custom(Binding<Bool>)
 }
 
@@ -16,6 +19,14 @@ public enum LogViewerPresentationStyle: Equatable, Sendable {
 }
 
 public extension View {
+    /// 指定したきっかけでLogViewerを表示する。
+    ///
+    /// - Parameters:
+    ///   - trigger: 表示を開始するきっかけ。
+    ///   - presentation: View内または専用ウインドウの表示方法。
+    ///   - store: 表示するログの保存先。
+    ///   - privacyPolicy: 表示直前に適用する秘匿化方針。
+    ///   - isTransparent: 背景を半透明にするかどうか。
     @ViewBuilder
     func logViewer(
         on trigger: ShowTrigger,

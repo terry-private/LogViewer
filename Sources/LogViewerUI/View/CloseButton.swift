@@ -16,6 +16,9 @@ struct CloseButton: View {
             .accessibilityLabel(
                 LogViewerLocalization.string(.accessibilityClose)
             )
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.close
+            )
         } else {
             Button {
                 action()
@@ -29,6 +32,9 @@ struct CloseButton: View {
             }
             .accessibilityLabel(
                 LogViewerLocalization.string(.accessibilityClose)
+            )
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.close
             )
         }
     }

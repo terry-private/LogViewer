@@ -14,10 +14,12 @@
 | 課題、進捗、優先順位、担当、依存関係、完了条件 | [GitHub課題](https://github.com/terry-private/LogViewer/issues) |
 | 変更理由、変更内容、実行した検証 | GitHubプルリクエスト |
 | 長期的に残す設計判断 | `docs/decisions/` |
-| バージョンごとの変更 | `CHANGELOG.md` またはGitHubリリース |
+| バージョンごとの変更 | [`CHANGELOG.md`](../CHANGELOG.md) |
+| 再利用可能な公開手順 | [`RELEASING.md`](RELEASING.md) |
 
 同じ内容を複数の場所へコピーせず、正本へのリンクを使う。
 GitHub課題をリポジトリ内の課題ファイルへ複製しない。
+GitHub Releaseは`CHANGELOG.md`の対象版を要約し、正本へリンクする。
 
 ## 言語
 
@@ -42,8 +44,8 @@ GitHub課題をリポジトリ内の課題ファイルへ複製しない。
 
 ## 更新規則
 
-- 対応環境を変更するときは `Package.swift`、`README.md`、`SUPPORT.md`、
-  検証手順を同じプルリクエストで更新する。
+- 対応環境を変更するときは `README.md`、`SUPPORT.md`、検証手順と、
+  宣言対象が変わる場合は`Package.swift`を同じプルリクエストで更新する。
 - 公開APIを変更するときは文書コメント、使用例、関連テストを同時に更新する。
 - 課題の完了によって確定した恒久仕様は、必要に応じて製品文書か設計判断へ反映する。
 - 検証結果はプルリクエストへ記録し、製品文書には再現可能な検証方法を記載する。

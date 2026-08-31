@@ -23,7 +23,7 @@ SwiftUIアプリ向けの、見やすく直感的なデバッグログ表示ツ�
 ## 必要環境
 
 - iOS 18.0以降
-- Xcode 26.0以降
+- Xcode 26.2以降
 - Swift 6.2以降
 
 現在は、iOSおよびiPadOS上で動作するSwiftUIアプリに対応する。
@@ -67,7 +67,7 @@ XcodeからLogViewerを追加する。
 
 1. 「ファイル」→「パッケージの依存関係を追加」を選択
 2. `https://github.com/terry-private/LogViewer.git`を入力
-3. 最初の安定版が公開されるまでは`main`ブランチを選択
+3. バージョン規則で`1.0.0`以上、次のメジャーバージョン未満を選択
 4. 「パッケージを追加」を実行
 
 `Package.swift`へ直接追加する場合は次のように記述する。
@@ -76,8 +76,16 @@ XcodeからLogViewerを追加する。
 dependencies: [
     .package(
         url: "https://github.com/terry-private/LogViewer.git",
-        branch: "main"
+        from: "1.0.0"
     )
+],
+targets: [
+    .target(
+        name: "MyApp",
+        dependencies: [
+            .product(name: "LogViewer", package: "LogViewer"),
+        ]
+    ),
 ]
 ```
 
@@ -450,7 +458,25 @@ enum ShowTrigger {
 
 不具合や改善案は
 [GitHub課題](https://github.com/terry-private/LogViewer/issues)へ登録する。
-変更を提案する場合はプルリクエストを作成する。
+変更を提案する場合は[貢献手引き](CONTRIBUTING.md)を確認し、テストと
+利用者向け文書を同じプルリクエストへ含める。
+
+## サンプルとAPI文書
+
+[LogViewerSample](Examples/LogViewerSample)は、専用ウインドウ、シート、全画面、
+警告、複数場面、検索、コピーを実際のアプリホストで確認できる。Xcodeで
+`LogViewerSample.xcodeproj`を開き、iPhoneまたはiPadで実行する。
+
+公開APIの詳細はXcodeのDeveloper Documentationで`LogViewer`、
+`LogViewerCore`、`LogViewerUI`、`LogViewerSwiftLog`を参照する。ローカルでは
+`./Scripts/verify-docs.sh`でDocCを検証できる。
+
+## 変更履歴と公開方針
+
+- [変更履歴](CHANGELOG.md)
+- [対応環境と互換性](docs/SUPPORT.md)
+- [移行手引き](docs/MIGRATION.md)
+- [公開手順](docs/RELEASING.md)
 
 ## ライセンス
 

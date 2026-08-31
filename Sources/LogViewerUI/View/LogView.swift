@@ -46,6 +46,9 @@ internal struct LogView: View {
                 .padding(.vertical, 8)
                 .background(.orange.opacity(0.18))
                 .accessibilityAddTraits(.isStaticText)
+                .accessibilityIdentifier(
+                    LogViewerAccessibilityIdentifier.paused
+                )
             }
 
             ScrollViewReader { proxy in
@@ -134,12 +137,18 @@ internal struct LogView: View {
                     viewState.deleteLogs()
                 }
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.confirmDelete
+            )
             Button(
                 LogViewerLocalization.string(.commonCancel),
                 role: .cancel
             ) {
                 deletionConfirmation.cancel()
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.cancelDelete
+            )
         } message: {
             Text(LogViewerLocalization.string(.logsDeleteMessage))
         }
@@ -241,6 +250,11 @@ extension LogView {
                         : "play.circle"
                 )
             }
+            .accessibilityIdentifier(
+                viewState.active
+                    ? LogViewerAccessibilityIdentifier.pause
+                    : LogViewerAccessibilityIdentifier.resume
+            )
             Button {
                 UIPasteboard.general.string = try? viewState.exportString(
                     format: .plainText
@@ -251,6 +265,9 @@ extension LogView {
                     systemImage: "doc.on.doc"
                 )
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.copy
+            )
             Button {
                 prepareShare(format: .plainText)
             } label: {
@@ -259,6 +276,9 @@ extension LogView {
                     systemImage: "square.and.arrow.up"
                 )
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.shareText
+            )
             Button {
                 prepareShare(format: .json)
             } label: {
@@ -267,6 +287,9 @@ extension LogView {
                     systemImage: "curlybraces"
                 )
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.shareJSON
+            )
             Button(role: .destructive) {
                 deletionConfirmation.request()
             } label: {
@@ -275,15 +298,24 @@ extension LogView {
                     systemImage: "trash"
                 )
             }
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.delete
+            )
         } label: {
             Image(systemName: "line.3.horizontal")
                 .font(.title2)
-                .accessibilityLabel(
-                    LogViewerLocalization.string(
-                        .accessibilityMoreActions
-                    )
-                )
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            LogViewerLocalization.string(
+                .accessibilityMoreActions
+            )
+        )
+        .accessibilityIdentifier(
+            LogViewerAccessibilityIdentifier.actions
+        )
     }
 
     private var emptyState: some View {
@@ -304,6 +336,9 @@ extension LogView {
         .foregroundStyle(.secondary)
         .padding()
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(
+            LogViewerAccessibilityIdentifier.empty
+        )
     }
 
     private var deleteConfirmationBinding: Binding<Bool> {

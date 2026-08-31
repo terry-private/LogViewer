@@ -301,11 +301,13 @@ struct LogViewerWindowSceneReader: UIViewRepresentable {
         _ uiView: SceneObservingView,
         coordinator: Void
     ) {
+        uiView.cancelPendingReport()
         uiView.onChange(nil)
     }
 
     final class SceneObservingView: UIView {
         var onChange: @MainActor (UIWindowScene?) -> Void
+        private var pendingReport: Task<Void, Never>?
 
         init(onChange: @escaping @MainActor (UIWindowScene?) -> Void) {
             self.onChange = onChange
@@ -321,7 +323,24 @@ struct LogViewerWindowSceneReader: UIViewRepresentable {
 
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            onChange(window?.windowScene)
+            pendingReport?.cancel()
+            pendingReport = Task { @MainActor [weak self] in
+                // SwiftUIのUIView更新中に@Stateを書き換えないよう、
+                // Scene通知を次のMainActor実行機会へ送る。
+                await Task.yield()
+                guard !Task.isCancelled, let self else { return }
+                onChange(window?.windowScene)
+                pendingReport = nil
+            }
+        }
+
+        func cancelPendingReport() {
+            pendingReport?.cancel()
+            pendingReport = nil
+        }
+
+        deinit {
+            pendingReport?.cancel()
         }
     }
 }
