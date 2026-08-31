@@ -43,9 +43,10 @@ View階層内の`overlay`は、アプリが表示しているシート、全画�
 - 最前面表示が必要な利用側だけ`.window`を選択する
 - シェイク検知の設計は[ADR 0006](0006-scene-shake-detection.md)を参照する
 - Swift Packageの単体テストには接続済み`UIWindowScene`がないため、Sceneを
-  使うシート前面表示と実キーボード入力のE2E検証はサンプルアプリを扱う
-  GitHub課題第15号で追加する
+  使うシート前面表示と実キーボード入力のE2E検証は
+  `Examples/LogViewerSample`のアプリホストE2Eで行う
 
 ## 関連情報
 
 - [GitHub課題第10号](https://github.com/terry-private/LogViewer/issues/10)
+- [GitHub課題第15号](https://github.com/terry-private/LogViewer/issues/15)
