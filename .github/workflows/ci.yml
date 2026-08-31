@@ -10,35 +10,10 @@ permissions:
   contents: read
 
 jobs:
-  minimum-xcode:
-    name: Xcode 26.0.1最低環境
+  verify:
+    name: Xcode 26.2最低環境・テスト・E2E
     runs-on: macos-26
     timeout-minutes: 60
-    steps:
-      - name: ソースコードを取得
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: 最低対応Xcodeを選択
-        run: sudo xcode-select -s /Applications/Xcode_26.0.1.app/Contents/Developer
-
-      - name: ツールチェーンを記録
-        run: |
-          xcodebuild -version
-          swift --version
-
-      - name: Xcode 26.0用iOS Platformを取得
-        run: xcodebuild -downloadPlatform iOS -buildVersion 26.0 -architectureVariant arm64
-
-      - name: 最低Xcodeで全製品をビルド
-        run: LOGVIEWER_BUILD_ONLY=1 ./Scripts/verify.sh
-
-      - name: DocCを検証
-        run: ./Scripts/verify-docs.sh
-
-  verify:
-    name: Xcode 26.2テストとE2E
-    runs-on: macos-26
-    timeout-minutes: 45
     steps:
       - name: ソースコードを取得
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

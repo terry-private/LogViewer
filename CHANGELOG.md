@@ -18,12 +18,12 @@
 - 保存前・表示前・書き出し前の秘匿化
 - 絞り込み後ログのコピー、テキスト共有、JSON共有
 - 任意導入のSwiftLog接続製品
-- サンプルアプリ、DocC、Xcode 26安定版CI
+- サンプルアプリ、DocC、Xcode 26.2安定版CI
 
 ### 互換性
 
 - iOS／iPadOS 18.0以降
-- Xcode 26.0以降
+- Xcode 26.2以降
 - Swift tools 6.2、Swift 6言語モード
 
 ### 既知の制約

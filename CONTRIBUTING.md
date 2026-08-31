@@ -16,7 +16,7 @@
 ```
 
 特定のSimulatorを使う場合は`LOGVIEWER_TEST_DESTINATION`と
-`LOGVIEWER_SAMPLE_DESTINATION`を指定する。最低対応のXcode 26安定版による検証は
+`LOGVIEWER_SAMPLE_DESTINATION`を指定する。最低対応のXcode 26.2による検証は
 GitHub Actionsでも実行する。
 
 ## Pull Request

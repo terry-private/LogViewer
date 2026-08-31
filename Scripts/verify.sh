@@ -86,7 +86,20 @@ if [ -z "$test_destination" ]; then
 fi
 
 xcodebuild \
-  -quiet \
   -scheme LogViewer-Package \
   -destination "$test_destination" \
-  test
+  build-for-testing
+
+package_test_targets='LogViewerCoreTests
+LogViewerUITests
+LogViewerSwiftLogTests
+LogViewerTests'
+
+for test_target in $package_test_targets; do
+  echo "Testing $test_target"
+  xcodebuild \
+    -scheme LogViewer-Package \
+    -destination "$test_destination" \
+    -only-testing:"$test_target" \
+    test-without-building
+done

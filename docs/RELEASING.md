@@ -5,7 +5,7 @@
 
 ## 公開前ゲート
 
-- [ ] 公開対象commitでXcode 26安定版の`./Scripts/verify.sh`が成功している
+- [ ] 公開対象commitでXcode 26.2の`./Scripts/verify.sh`が成功している
 - [ ] `./Scripts/verify-docs.sh`と`./Scripts/verify-sample.sh`が成功している
 - [ ] 実端末手動チェックを完了し、端末、OS、言語、文字サイズをPRへ記録している
 - [ ] 公開API、README、DocC、MIGRATIONが一致している
