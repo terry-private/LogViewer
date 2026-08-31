@@ -46,7 +46,6 @@ if [ -z "$test_destination" ]; then
 fi
 
 xcodebuild \
-  -quiet \
   -project "$project_path" \
   -scheme LogViewerSample \
   -destination "$test_destination" \
@@ -61,8 +60,8 @@ testEnglishMaximumTextKeepsImportantActionsReachable
 testSecondarySceneCanBeOpened'
 
 for test_name in $tests; do
+  echo "Testing LogViewerSampleUITests/$test_name"
   xcodebuild \
-    -quiet \
     -project "$project_path" \
     -scheme LogViewerSample \
     -destination "$test_destination" \
