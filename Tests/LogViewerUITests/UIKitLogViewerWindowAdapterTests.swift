@@ -111,14 +111,22 @@ struct UIKitLogViewerWindowAdapterTests {
     @Test("SceneReaderの接続通知はUIView更新の次に送る")
     func sceneReaderReportsAfterMovingToWindow() async {
         let window = UIWindow(frame: .zero)
+        var didReturnFromAddSubview = false
+        var callbackCount = 0
 
         await withCheckedContinuation { continuation in
             let view = LogViewerWindowSceneReader.SceneObservingView {
-                #expect($0 == nil)
+                callbackCount += 1
+                #expect(didReturnFromAddSubview)
+                #expect($0 === window.windowScene)
                 continuation.resume()
             }
             window.addSubview(view)
+            #expect(callbackCount == 0)
+            didReturnFromAddSubview = true
         }
+
+        #expect(callbackCount == 1)
     }
 
     @Test("SceneReaderは解体後に保留中の接続通知を送らない")
