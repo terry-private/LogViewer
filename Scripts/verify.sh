@@ -8,6 +8,57 @@ test_destination=${LOGVIEWER_TEST_DESTINATION:-}
 
 cd "$repository_directory"
 
+swift package dump-package >/dev/null
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewerCore \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewerCore \
+  -configuration Release \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewer \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewer \
+  -configuration Release \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewerSwiftLog \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+xcodebuild \
+  -quiet \
+  -scheme LogViewerSwiftLog \
+  -configuration Release \
+  -destination "generic/platform=iOS Simulator" \
+  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
+  build
+
+if [ "${LOGVIEWER_BUILD_ONLY:-0}" = "1" ]; then
+  exit 0
+fi
+
 if [ -z "$test_destination" ]; then
   simulator_id=$(
     xcodebuild -scheme LogViewer -showdestinations 2>/dev/null |
@@ -33,45 +84,6 @@ if [ -z "$test_destination" ]; then
 
   test_destination="platform=iOS Simulator,id=$simulator_id"
 fi
-
-swift package dump-package >/dev/null
-
-xcodebuild \
-  -quiet \
-  -scheme LogViewerCore \
-  -destination "generic/platform=iOS Simulator" \
-  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-  build
-
-xcodebuild \
-  -quiet \
-  -scheme LogViewer \
-  -destination "generic/platform=iOS Simulator" \
-  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-  build
-
-xcodebuild \
-  -quiet \
-  -scheme LogViewer \
-  -configuration Release \
-  -destination "generic/platform=iOS Simulator" \
-  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-  build
-
-xcodebuild \
-  -quiet \
-  -scheme LogViewerSwiftLog \
-  -destination "generic/platform=iOS Simulator" \
-  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-  build
-
-xcodebuild \
-  -quiet \
-  -scheme LogViewerSwiftLog \
-  -configuration Release \
-  -destination "generic/platform=iOS Simulator" \
-  IPHONEOS_DEPLOYMENT_TARGET=18.0 \
-  build
 
 xcodebuild \
   -quiet \

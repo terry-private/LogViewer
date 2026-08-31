@@ -1,0 +1,71 @@
+name: 継続的検証
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  minimum-xcode:
+    name: Xcode 26.0.1最低環境
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: ソースコードを取得
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: 最低対応Xcodeを選択
+        run: sudo xcode-select -s /Applications/Xcode_26.0.1.app/Contents/Developer
+
+      - name: ツールチェーンを記録
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: 最低Xcodeで全製品をビルド
+        run: LOGVIEWER_BUILD_ONLY=1 ./Scripts/verify.sh
+
+      - name: DocCを検証
+        run: ./Scripts/verify-docs.sh
+
+  verify:
+    name: Xcode 26.2テストとE2E
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: ソースコードを取得
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: 検証用Xcodeを選択
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: ツールチェーンを記録
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: iOS 26.2のiPad Simulatorを選択
+        run: |
+          simulator_id=$(xcrun simctl list devices available --json | jq -r \
+            '.devices | to_entries[] | select(.key | contains("iOS-26-2")) | .value[] | select(.name | startswith("iPad")) | .udid' | head -1)
+          if [[ -z "$simulator_id" ]]; then
+            echo "iOS 26.2のiPad Simulatorがありません" >&2
+            exit 1
+          fi
+          xcrun simctl boot "$simulator_id"
+          xcrun simctl bootstatus "$simulator_id" -b
+          echo "LOGVIEWER_TEST_DESTINATION=platform=iOS Simulator,id=$simulator_id" >> "$GITHUB_ENV"
+          echo "LOGVIEWER_SAMPLE_DESTINATION=platform=iOS Simulator,id=$simulator_id" >> "$GITHUB_ENV"
+
+      - name: パッケージを検証
+        run: ./Scripts/verify.sh
+
+      - name: DocCを検証
+        run: ./Scripts/verify-docs.sh
+
+      - name: サンプルとアプリホストE2Eを検証
+        run: ./Scripts/verify-sample.sh

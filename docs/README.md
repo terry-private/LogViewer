@@ -14,10 +14,12 @@
 | 課題、進捗、優先順位、担当、依存関係、完了条件 | [GitHub課題](https://github.com/terry-private/LogViewer/issues) |
 | 変更理由、変更内容、実行した検証 | GitHubプルリクエスト |
 | 長期的に残す設計判断 | `docs/decisions/` |
-| バージョンごとの変更 | `CHANGELOG.md` またはGitHubリリース |
+| バージョンごとの変更 | [`CHANGELOG.md`](../CHANGELOG.md) |
+| 再利用可能な公開手順 | [`RELEASING.md`](RELEASING.md) |
 
 同じ内容を複数の場所へコピーせず、正本へのリンクを使う。
 GitHub課題をリポジトリ内の課題ファイルへ複製しない。
+GitHub Releaseは`CHANGELOG.md`の対象版を要約し、正本へリンクする。
 
 ## 言語
 

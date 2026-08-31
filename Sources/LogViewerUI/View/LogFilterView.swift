@@ -86,6 +86,9 @@ struct LogFilterView: View {
             )
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .accessibilityIdentifier(
+                    LogViewerAccessibilityIdentifier.search
+                )
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
@@ -98,6 +101,9 @@ struct LogFilterView: View {
                     LogViewerLocalization.string(
                         .accessibilityClearSearch
                     )
+                )
+                .accessibilityIdentifier(
+                    LogViewerAccessibilityIdentifier.clearSearch
                 )
             }
         }
@@ -112,7 +118,11 @@ struct LogFilterView: View {
                 ForEach(LogLevel.allCases, id: \.self) { level in
                     filterButton(
                         title: level.filterTitle,
-                        isSelected: filter.levels.contains(level)
+                        isSelected: filter.levels.contains(level),
+                        accessibilityIdentifier:
+                            LogViewerAccessibilityIdentifier.level(
+                                String(describing: level)
+                            )
                     ) {
                         toggle(level, in: &filter.levels)
                     }
@@ -162,7 +172,11 @@ struct LogFilterView: View {
                     ForEach(allTags, id: \.self) { tag in
                         filterButton(
                             title: tag.rawValue,
-                            isSelected: filter.tags.contains(tag)
+                            isSelected: filter.tags.contains(tag),
+                            accessibilityIdentifier:
+                                LogViewerAccessibilityIdentifier.tag(
+                                    tag.rawValue
+                                )
                         ) {
                             toggle(tag, in: &filter.tags)
                         }
@@ -218,6 +232,9 @@ struct LogFilterView: View {
         ))
             .font(.caption.monospacedDigit())
             .foregroundStyle(.secondary)
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.resultCount
+            )
     }
 
     @ViewBuilder
@@ -230,12 +247,16 @@ struct LogFilterView: View {
                 searchText = ""
             }
             .font(.caption)
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.clearFilter
+            )
         }
     }
 
     private func filterButton(
         title: String,
         isSelected: Bool,
+        accessibilityIdentifier: String,
         action: @escaping () -> Void
     ) -> some View {
         let selection = LogViewerAccessibilityPolicy.selectionPresentation(
@@ -261,6 +282,7 @@ struct LogFilterView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .accessibilityIdentifier(accessibilityIdentifier)
         .accessibilityAddTraits(
             selection.isAccessibilitySelected ? .isSelected : []
         )

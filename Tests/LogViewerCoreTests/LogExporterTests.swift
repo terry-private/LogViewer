@@ -118,6 +118,56 @@ struct LogExporterTests {
         #expect(text.contains(#"metadata={"key,one":"value=two\nnext"}"#))
     }
 
+    @Test("バージョン1のJSON fixtureと互換で未知の項目を無視する")
+    func maintainsVersionOneJSONCompatibility() throws {
+        let fixtureURL = try #require(
+            Bundle.module.url(
+                forResource: "log-entry-v1",
+                withExtension: "json"
+            )
+        )
+        let fixture = try Data(contentsOf: fixtureURL)
+        let expected = makeEntry(
+            message: "Request failed",
+            metadata: ["request-id": "42"]
+        )
+        let exported = try LogExporter().data(
+            from: [expected],
+            format: .json
+        )
+
+        #expect(try jsonObject(exported) == jsonObject(fixture))
+
+        var object = try #require(
+            jsonObject(fixture) as? [[String: Any]]
+        )
+        object[0]["futureField"] = "ignored"
+        let futureJSON = try JSONSerialization.data(withJSONObject: object)
+        #expect(try decoder().decode([LogEntry].self, from: futureJSON)
+            == [expected])
+    }
+
+    @Test("JSON v1はcategoryがnilならキーを省略して復号できる")
+    func omitsNilCategoryInVersionOneJSON() throws {
+        let entry = LogEntry(
+            message: "No category",
+            source: SourceLocation(
+                fileID: "API.swift",
+                function: "send()",
+                line: 42
+            ),
+            category: nil,
+            timestamp: Date(timeIntervalSince1970: 1_000.125)
+        )
+        let data = try LogExporter().data(from: [entry], format: .json)
+        let object = try #require(
+            JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        )
+
+        #expect(object.first?["category"] == nil)
+        #expect(try decoder().decode([LogEntry].self, from: data) == [entry])
+    }
+
     private func makeEntry(
         message: String,
         metadata: [String: String] = [:]
@@ -136,5 +186,30 @@ struct LogExporterTests {
             metadata: metadata,
             timestamp: Date(timeIntervalSince1970: 1_000.125)
         )
+    }
+
+    private func jsonObject(_ data: Data) throws -> AnyHashable {
+        try #require(
+            JSONSerialization.jsonObject(with: data) as? AnyHashable
+        )
+    }
+
+    private func decoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            guard let date = try? Date(
+                value,
+                strategy: .iso8601
+            ) else {
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Invalid ISO 8601 timestamp"
+                )
+            }
+            return date
+        }
+        return decoder
     }
 }

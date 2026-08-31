@@ -107,4 +107,36 @@ struct UIKitLogViewerWindowAdapterTests {
         #expect(callbackCount == 1)
         #expect(reportedScene == nil)
     }
+
+    @Test("SceneReaderの接続通知はUIView更新の次に送る")
+    func sceneReaderReportsAfterMovingToWindow() async {
+        let window = UIWindow(frame: .zero)
+
+        await withCheckedContinuation { continuation in
+            let view = LogViewerWindowSceneReader.SceneObservingView {
+                #expect($0 == nil)
+                continuation.resume()
+            }
+            window.addSubview(view)
+        }
+    }
+
+    @Test("SceneReaderは解体後に保留中の接続通知を送らない")
+    func sceneReaderCancelsPendingReportOnDismantle() async {
+        var callbackCount = 0
+        let view = LogViewerWindowSceneReader.SceneObservingView { _ in
+            callbackCount += 1
+        }
+        let window = UIWindow(frame: .zero)
+
+        window.addSubview(view)
+        LogViewerWindowSceneReader.dismantleUIView(
+            view,
+            coordinator: ()
+        )
+        await Task.yield()
+        await Task.yield()
+
+        #expect(callbackCount == 1)
+    }
 }

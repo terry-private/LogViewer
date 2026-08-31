@@ -65,6 +65,9 @@ let package = Package(
             name: "LogViewerCoreTests",
             dependencies: [
                 "LogViewerCore",
+            ],
+            resources: [
+                .process("Fixtures"),
             ]
         ),
         .testTarget(

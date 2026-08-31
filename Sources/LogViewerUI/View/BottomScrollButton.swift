@@ -19,6 +19,9 @@ struct BottomScrollButton: View {
                     .accessibilityScrollToBottom
                 )
             )
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.scrollToBottom
+            )
         } else {
             Button {
                 action()
@@ -34,6 +37,9 @@ struct BottomScrollButton: View {
                 LogViewerLocalization.string(
                     .accessibilityScrollToBottom
                 )
+            )
+            .accessibilityIdentifier(
+                LogViewerAccessibilityIdentifier.scrollToBottom
             )
         }
     }
