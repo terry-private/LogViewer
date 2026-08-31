@@ -13,10 +13,10 @@ jobs:
   minimum-xcode:
     name: Xcode 26.0.1最低環境
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: ソースコードを取得
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: 最低対応Xcodeを選択
         run: sudo xcode-select -s /Applications/Xcode_26.0.1.app/Contents/Developer
@@ -25,6 +25,9 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
+
+      - name: Xcode 26.0用iOS Platformを取得
+        run: xcodebuild -downloadPlatform iOS -buildVersion 26.0 -architectureVariant arm64
 
       - name: 最低Xcodeで全製品をビルド
         run: LOGVIEWER_BUILD_ONLY=1 ./Scripts/verify.sh
@@ -38,7 +41,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: ソースコードを取得
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: 検証用Xcodeを選択
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
