@@ -8,7 +8,9 @@ test_destination=${LOGVIEWER_TEST_DESTINATION:-}
 
 cd "$repository_directory"
 
-swift package dump-package >/dev/null
+package_manifest=$(swift package dump-package)
+package_test_targets=$(printf '%s\n' "$package_manifest" | python3 "$script_directory/package-test-targets.py" \
+  "$repository_directory/.swiftpm/xcode/xcshareddata/xcschemes/LogViewer-Package.xcscheme")
 
 xcodebuild \
   -quiet \
@@ -89,11 +91,6 @@ xcodebuild \
   -scheme LogViewer-Package \
   -destination "$test_destination" \
   build-for-testing
-
-package_test_targets='LogViewerCoreTests
-LogViewerUITests
-LogViewerSwiftLogTests
-LogViewerTests'
 
 for test_target in $package_test_targets; do
   echo "Testing $test_target"

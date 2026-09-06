@@ -42,6 +42,9 @@ jobs:
       - name: パッケージを検証
         run: ./Scripts/verify.sh
 
+      - name: 検証スクリプトをテスト
+        run: python3 -m unittest discover -s Scripts/tests
+
       - name: DocCを検証
         run: ./Scripts/verify-docs.sh
 
