@@ -13,6 +13,7 @@
 ./Scripts/verify.sh
 ./Scripts/verify-docs.sh
 ./Scripts/verify-sample.sh
+python3 -m unittest discover -s Scripts/tests
 ```
 
 特定のSimulatorを使う場合は`LOGVIEWER_TEST_DESTINATION`と

@@ -1,6 +1,13 @@
 .DS_Store
 /.build
-/.swiftpm
+/.swiftpm/*
+!/.swiftpm/xcode/
+/.swiftpm/xcode/*
+!/.swiftpm/xcode/xcshareddata/
+/.swiftpm/xcode/xcshareddata/*
+!/.swiftpm/xcode/xcshareddata/xcschemes/
+/.swiftpm/xcode/xcshareddata/xcschemes/*
+!/.swiftpm/xcode/xcshareddata/xcschemes/LogViewer-Package.xcscheme
 /Packages
 xcuserdata/
 DerivedData/

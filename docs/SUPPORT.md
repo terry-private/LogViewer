@@ -73,6 +73,11 @@ LogViewerは、主にデバッグ、開発、TestFlight、そのほかの内部�
 
 ## ローカル検証
 
+検証スクリプトはPython 3の標準ライブラリを使用する。
+Packageのテスト対象は`Package.swift`から取得し、共有スキームの有効な
+テスト対象と一致しない場合はビルド前に停止する。テストターゲットの追加時は
+`.swiftpm/xcode/xcshareddata/xcschemes/LogViewer-Package.xcscheme`も更新する。
+
 すべてのローカル検証を実行する。
 
 ```bash
